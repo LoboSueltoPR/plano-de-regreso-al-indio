@@ -1,0 +1,571 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Plano del predio de De regreso al Indio en el Parque Boronat"></head><body><title>De regreso al Indio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: mapa del predio a la izquierda (fila única en celular), panel de sectores/emprendedores a la derecha */
+:root{
+  --bg:#f3f1ec; --surface:#fffdf8; --surface2:#ebe7de; --ink:#1d1b18; --muted:#6b665d; --line:#d9d3c7;
+  --accent:#c8202a; --accent-ink:#ffffff; --ok:#2f8a3e; --warn:#b7791f; --focus:#1d6fd6;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow","Segoe UI",Helvetica,Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151413; --surface:#1f1d1b; --surface2:#2a2825; --ink:#f1ede6; --muted:#a59f94; --line:#3a3733;
+  --accent:#ef4a4f; --accent-ink:#1a0505; --ok:#5cc46c; --warn:#e3a84a; --focus:#6aa7ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151413; --surface:#1f1d1b; --surface2:#2a2825; --ink:#f1ede6; --muted:#a59f94; --line:#3a3733;
+  --accent:#ef4a4f; --accent-ink:#1a0505; --ok:#5cc46c; --warn:#e3a84a; --focus:#6aa7ff; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;margin-bottom:12px}
+.top h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1;margin:0;letter-spacing:.2px;text-transform:uppercase;text-wrap:balance}
+.top .sub{color:var(--muted);margin-top:4px}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat b{font-weight:700}
+.estado{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.estado i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.estado.ok i{background:var(--ok)} .estado.ro i{background:var(--warn)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+.mapcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;min-width:0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--line)}
+.bar .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;line-height:1.1}
+.btn:hover{background:var(--surface2)}
+.btn.prim{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.sq{width:34px;justify-content:center;padding:7px 0}
+.btn.danger{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.btn[disabled]{opacity:.45;cursor:default}
+.mapbox{position:relative;background:#e3dbcf}
+#map{display:block;width:100%;height:auto;max-height:calc(100vh - 170px);touch-action:auto;user-select:none;-webkit-user-select:none}
+#map.editando{touch-action:none}
+#map .el{cursor:pointer}
+#map.editando .el{cursor:grab}
+#map .el.sel .contorno{display:block}
+#map .contorno{display:none}
+.hint{font-size:12.5px;color:var(--muted);padding:7px 10px;border-top:1px solid var(--line)}
+.vacio-mapa{position:absolute;inset:auto 12px 12px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tab{flex:1;background:none;border:0;padding:11px 8px;font-family:var(--f-display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.pbody{padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+
+.num{flex:none;width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:700;font-size:13.5px;box-shadow:0 0 0 2px var(--surface)}
+.lista{display:flex;flex-direction:column;gap:2px}
+.item{display:flex;gap:10px;align-items:center;padding:8px;border-radius:8px;cursor:pointer;border:0;background:none;text-align:left;width:100%}
+.item:hover{background:var(--surface2)}
+.item .t{font-weight:700;font-size:15.5px}
+.item .d{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.item .der{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.minibar{height:5px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:4px;width:90px}
+.minibar span{display:block;height:100%;background:var(--ok)}
+
+.det-head{display:flex;gap:10px;align-items:center}
+.det-head input{font-family:var(--f-display);font-weight:700;font-size:24px;text-transform:uppercase;border:1px solid transparent;background:none;border-radius:6px;padding:2px 6px;width:100%;min-width:0}
+.det-head input:hover:not([readonly]),.det-head input:focus{border-color:var(--line);background:var(--bg)}
+.volver{align-self:flex-start;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;font-weight:600}
+.campo{display:flex;flex-direction:column;gap:4px}
+.campo>span,.lbl{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.inp{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea.inp{resize:vertical;min-height:64px}
+.fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.area{background:var(--surface2);border-radius:8px;padding:8px 10px;font-size:14px;font-variant-numeric:tabular-nums}
+.sep{border:0;border-top:1px solid var(--line);margin:2px 0}
+.ro-note{font-size:13px;color:var(--muted);background:var(--surface2);border-radius:8px;padding:8px 10px}
+
+.emps{display:flex;flex-direction:column;gap:8px}
+.emp{border:1px solid var(--line);border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:3px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
+.emp:hover{border-color:var(--muted)}
+.emp .l1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.emp .n{font-weight:700;font-size:15.5px}
+.emp .r{color:var(--muted);font-size:13.5px}
+.emp .c{font-size:13px;user-select:text;-webkit-user-select:text;overflow-wrap:anywhere}
+.pill{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill.confirmado{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.pill.pendiente{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.pill.consultado{background:var(--surface2);color:var(--muted)}
+.tag{font-size:12px;border-radius:6px;padding:1px 6px;color:#fff;font-weight:600;white-space:nowrap}
+.luz{font-size:12px;color:var(--muted)}
+.filtros{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:13px;cursor:pointer;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.form{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.vacio{color:var(--muted);font-size:14px;background:var(--surface2);border-radius:8px;padding:12px}
+.check{display:flex;gap:8px;align-items:center;font-size:14px}
+
+.menu{position:absolute;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:6px;display:grid;grid-template-columns:1fr 1fr;gap:2px;width:280px;max-width:calc(100vw - 32px)}
+.menu button{display:flex;gap:8px;align-items:center;border:0;background:none;padding:7px 8px;border-radius:7px;cursor:pointer;text-align:left;font-size:14px}
+.menu button:hover{background:var(--surface2)}
+.menu i{width:14px;height:14px;border-radius:4px;flex:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;z-index:10;max-width:calc(100vw - 32px)}
+@media (prefers-reduced-motion:no-preference){.item,.btn,.emp{transition:background .12s,border-color .12s}}
+</style>
+
+<header class="top">
+  <div>
+    <h1>De regreso al Indio</h1>
+    <div class="sub">Plano del predio · Parque Boronat · dom 18/10</div>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<main class="layout">
+  <section class="mapcard" aria-label="Plano">
+    <div class="bar">
+      <button class="btn" id="btnEditar" aria-pressed="false" title="Activá para arrastrar y girar las cosas en el plano">Mover cosas</button>
+      <div style="position:relative">
+        <button class="btn prim" id="btnAgregar" aria-haspopup="true" aria-expanded="false">+ Agregar</button>
+      </div>
+      <button class="btn" id="btnDescargar" hidden title="Baja un datos.js con todo lo que cambiaste, para reemplazar el del repo">Descargar datos</button>
+      <button class="btn" id="btnOriginal" hidden title="Descarta tus cambios y vuelve al plano guardado en el código">Plano original</button>
+      <span class="sp"></span>
+      <button class="btn sq" id="zMenos" aria-label="Alejar">−</button>
+      <button class="btn sq" id="zMas" aria-label="Acercar">+</button>
+      <button class="btn" id="zAjustar">Ver todo</button>
+    </div>
+    <div class="mapbox">
+      <svg id="map" viewBox="0 0 782 969" role="img" aria-label="Plano del Parque Boronat con los sectores del evento">
+        <image href="mapa.svg" x="0" y="0" width="782" height="969" id="fondo"/>
+        <g id="gCables"></g><g id="gEls"></g><g id="gNums"></g><g id="gAsas"></g>
+      </svg>
+      <div class="vacio-mapa" id="vacioMapa" hidden></div>
+    </div>
+    <div class="hint" id="hint">Tocá un sector para ver y cargar su información. Para acomodar el plano, activá «Mover cosas».</div>
+  </section>
+
+  <aside class="panel" aria-label="Sectores y emprendedores">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tabSec" aria-selected="true">Sectores</button>
+      <button class="tab" role="tab" id="tabEmp" aria-selected="false">Emprendedores</button>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </aside>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="datos.js"></script>
+<script src="local-db.js"></script>
+<script>
+(() => {
+const PX_M = 3.4;                       // px del mapa por metro (escala del plano base)
+const VB0 = {x:0, y:0, w:782, h:969};
+const COLORES = ["#e5282e","#3aa63a","#d6c63a","#6a1b5a","#2f3fcf","#a565f0","#f08a1c","#22b5ec","#c8102e","#0f8b8d","#7a5230","#444444"];
+const TIPOS = {
+  puestos:   {nombre:"Puestos",          forma:"rect",   w:60, h:14, color:"#2f3fcf", cupos:6, recibe:true},
+  gazebo:    {nombre:"Gazebo",           forma:"circle", r:10, color:"#3aa63a"},
+  tarima:    {nombre:"Escenario",        forma:"rect",   w:40, h:16, color:"#e5282e"},
+  banos:     {nombre:"Baños",            forma:"circle", r:12, color:"#a565f0"},
+  agua:      {nombre:"Punto de agua",    forma:"circle", r:7,  color:"#22b5ec"},
+  cestos:    {nombre:"Cestos de basura", forma:"circle", r:6,  color:"#444444"},
+  extintor:  {nombre:"Extintor",         forma:"rect",   w:8,  h:8, color:"#c8102e", contorno:true},
+  cartel:    {nombre:"Cartel",           forma:"rect",   w:16, h:6, color:"#7a5230"},
+  seguridad: {nombre:"Seguridad",        forma:"circle", r:8,  color:"#0f8b8d"},
+  zona:      {nombre:"Zona",             forma:"poly",   pts:[[-30,-24],[30,-24],[30,24],[-30,24]], color:"#d6c63a"},
+};
+
+const S = {db:null, user:null, canWrite:false, conectado:false, cargado:false,
+  els:new Map(), emps:new Map(), sel:null, tab:"sec", editar:false,
+  drag:null, vb:{...VB0}, filtroEstado:"todos", busca:"", formEmp:null, borrar:null};
+
+const $ = id => document.getElementById(id);
+const svg = $("map");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Math.round(n).toLocaleString("es-AR");
+
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2600); }
+
+// ---------- geometría ----------
+function areaPx(e){
+  if(e.forma==="rect") return e.w*e.h;
+  if(e.forma==="circle") return Math.PI*e.r*e.r;
+  const p=e.pts||[]; let a=0; for(let i=0;i<p.length;i++){const [x1,y1]=p[i],[x2,y2]=p[(i+1)%p.length]; a+=x1*y2-x2*y1;}
+  const k=e.escala||1; return Math.abs(a)/2*k*k;
+}
+const m2 = e => areaPx(e)/(PX_M*PX_M);
+function ext(e){ // medio tamaño aproximado (en px) para ubicar número y asa
+  if(e.forma==="rect") return {a:e.w/2, b:e.h/2};
+  if(e.forma==="circle") return {a:e.r, b:e.r};
+  const k=e.escala||1, xs=e.pts.map(p=>Math.abs(p[0]*k)), ys=e.pts.map(p=>Math.abs(p[1]*k));
+  return {a:Math.max(...xs), b:Math.max(...ys)};
+}
+function puntoMasCercano(e, px, py){ // punto del borde de e más cercano a (px,py)
+  if(e.forma==="circle"){ const dx=px-e.x, dy=py-e.y, d=Math.hypot(dx,dy)||1; return [e.x+dx/d*e.r, e.y+dy/d*e.r]; }
+  const t=-(e.rot||0)*Math.PI/180, c=Math.cos(t), s=Math.sin(t);
+  const lx=(px-e.x)*c-(py-e.y)*s, ly=(px-e.x)*s+(py-e.y)*c;
+  const {a,b}=ext(e), qx=Math.max(-a,Math.min(a,lx)), qy=Math.max(-b,Math.min(b,ly));
+  const t2=-t, c2=Math.cos(t2), s2=Math.sin(t2);
+  return [e.x+qx*c2-qy*s2, e.y+qx*s2+qy*c2];
+}
+
+// ---------- datos derivados ----------
+const ordenados = () => [...S.els.values()].sort((a,b)=>(a.num??99)-(b.num??99) || String(a.nombre).localeCompare(b.nombre));
+const sectoresPuestos = () => ordenados().filter(e=>e.recibe);
+const empsDe = id => [...S.emps.values()].filter(p=>p.sector===id);
+function ocupacion(e){ const l=empsDe(e.id); return {conf:l.filter(p=>p.estado==="confirmado").length, total:l.length, cupos:e.cupos||0}; }
+
+// ---------- mapa ----------
+function shapeSVG(e){
+  const fill = e.contorno ? "#fff" : e.color, stroke = e.contorno ? e.color : "#fff", sw = e.contorno ? 2.2 : 2;
+  let g = "", out = "";
+  if(e.forma==="rect"){
+    g += `<rect x="${-e.w/2}" y="${-e.h/2}" width="${e.w}" height="${e.h}" rx="1.5" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+    if(e.recibe && e.cupos>0){
+      const o=ocupacion(e), cw=e.w/e.cupos;
+      for(let i=0;i<e.cupos;i++){
+        const x=-e.w/2+i*cw;
+        if(i>=o.conf) g += `<rect x="${x+1}" y="${-e.h/2+1}" width="${Math.max(0,cw-2)}" height="${Math.max(0,e.h-2)}" fill="#fff" opacity=".38"/>`;
+        if(i>0) g += `<line x1="${x}" y1="${-e.h/2}" x2="${x}" y2="${e.h/2}" stroke="#fff" stroke-width="1.2"/>`;
+      }
+    }
+    if(e.tipo==="ambulancia") g += `<path d="M-4 0h8M0 -4v8" stroke="${e.color}" stroke-width="2.4"/>`;
+    out = `<rect class="contorno" x="${-e.w/2-4}" y="${-e.h/2-4}" width="${e.w+8}" height="${e.h+8}" rx="4" fill="none" stroke="#1d1b18" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  } else if(e.forma==="circle"){
+    g += `<circle r="${e.r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw+0.6}"/>`;
+    out = `<circle class="contorno" r="${e.r+5}" fill="none" stroke="#1d1b18" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  } else {
+    const k=e.escala||1, pts=e.pts.map(p=>`${p[0]*k},${p[1]*k}`).join(" ");
+    g += `<polygon points="${pts}" fill="${fill}" fill-opacity=".92" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/>`;
+    out = `<polygon class="contorno" points="${pts}" fill="none" stroke="#1d1b18" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  }
+  return `<g class="el${S.sel===e.id?" sel":""}" data-id="${esc(e.id)}" transform="translate(${e.x} ${e.y}) rotate(${e.rot||0})">${g}${out}</g>`;
+}
+function numPos(e){
+  const {a,b}=ext(e);
+  if(Math.min(a,b)>=20) return [e.x, e.y];
+  const r=Math.max(a,b);
+  return [e.x+r+11, e.y-Math.min(b,8)];
+}
+function renderMapa(){
+  const els = ordenados();
+  $("gEls").innerHTML = els.map(shapeSVG).join("");
+  $("gNums").innerHTML = els.filter(e=>e.num!=null && e.num!=="").map(e=>{
+    const [x,y]=numPos(e); const n=String(e.num);
+    return `<g class="el" data-id="${esc(e.id)}"><circle cx="${x}" cy="${y}" r="10.5" fill="${e.color}" stroke="#fff" stroke-width="2.4"/>`+
+      `<text x="${x}" y="${y+4.2}" text-anchor="middle" font-size="${n.length>1?10:12}" font-weight="700" fill="#fff" font-family="Barlow, Arial, sans-serif">${esc(n)}</text></g>`;
+  }).join("");
+  $("gCables").innerHTML = els.filter(e=>e.conectaA && S.els.get(e.conectaA)).map(e=>{
+    const d=S.els.get(e.conectaA), [x1,y1]=puntoMasCercano(e,d.x,d.y), [x2,y2]=puntoMasCercano(d,e.x,e.y);
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`+
+           `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1597d0" stroke-width="2.6" stroke-linecap="round"/>`;
+  }).join("");
+  const e = S.sel && S.els.get(S.sel);
+  if(e && S.editar && S.canWrite){
+    const {b}=ext(e), t=(e.rot||0)*Math.PI/180, d=b+16;
+    const hx=e.x+Math.sin(t)*d, hy=e.y-Math.cos(t)*d;
+    $("gAsas").innerHTML = `<line x1="${e.x}" y1="${e.y}" x2="${hx}" y2="${hy}" stroke="#1d1b18" stroke-width="1.2" stroke-dasharray="3 3"/>`+
+      `<circle id="asaGiro" cx="${hx}" cy="${hy}" r="7" fill="#fff" stroke="#1d1b18" stroke-width="2" style="cursor:alias"><title>Arrastrá para girar</title></circle>`;
+  } else $("gAsas").innerHTML = "";
+  const v=$("vacioMapa");
+  if(!S.conectado){ v.hidden=false; v.textContent = S.cargado ? "No se pudo conectar con los datos del plano. Abrí la página desde claude.ai para verlo y editarlo." : "Cargando el plano…"; }
+  else if(S.els.size===0){ v.hidden=false; v.textContent = "Todavía no hay sectores en el plano. Usá «+ Agregar» para sumar el primero."; }
+  else v.hidden=true;
+}
+function setVB(){ const v=S.vb; svg.setAttribute("viewBox",`${v.x} ${v.y} ${v.w} ${v.h}`); }
+function zoom(f, cx, cy){
+  const v=S.vb, nw=Math.max(150,Math.min(VB0.w,v.w*f)), k=nw/v.w;
+  cx ??= v.x+v.w/2; cy ??= v.y+v.h/2;
+  v.x = cx-(cx-v.x)*k; v.y = cy-(cy-v.y)*k; v.w=nw; v.h=v.w*VB0.h/VB0.w; limitar(); setVB();
+}
+function limitar(){ const v=S.vb; v.x=Math.max(0,Math.min(VB0.w-v.w,v.x)); v.y=Math.max(0,Math.min(VB0.h-v.h,v.y)); }
+function ptSVG(ev){ const p=svg.createSVGPoint(); p.x=ev.clientX; p.y=ev.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+
+svg.addEventListener("pointerdown", ev => {
+  const p=ptSVG(ev);
+  if(ev.target.id==="asaGiro"){ const e=S.els.get(S.sel); S.drag={modo:"giro", id:e.id, orig:{rot:e.rot||0}}; svg.setPointerCapture(ev.pointerId); ev.preventDefault(); return; }
+  const g=ev.target.closest(".el");
+  if(g){
+    const id=g.dataset.id, e=S.els.get(id); if(!e) return;
+    if(S.sel!==id){ S.sel=id; S.tab="sec"; S.borrar=null; renderTodo(); }
+    if(S.editar && S.canWrite){ S.drag={modo:"mover", id, dx:p.x-e.x, dy:p.y-e.y, orig:{x:e.x,y:e.y}, movio:false}; svg.setPointerCapture(ev.pointerId); ev.preventDefault(); }
+    return;
+  }
+  if(S.vb.w<VB0.w && (S.editar || ev.pointerType==="mouse")){ S.drag={modo:"pan", sx:ev.clientX, sy:ev.clientY, vx:S.vb.x, vy:S.vb.y, movio:false}; svg.setPointerCapture(ev.pointerId); }
+  else S.drag={modo:"click"};
+});
+svg.addEventListener("pointermove", ev => {
+  const d=S.drag; if(!d) return;
+  if(d.modo==="mover"){ const p=ptSVG(ev), e=S.els.get(d.id); e.x=Math.round((p.x-d.dx)*10)/10; e.y=Math.round((p.y-d.dy)*10)/10; d.movio=true; renderMapa(); }
+  else if(d.modo==="giro"){ const p=ptSVG(ev), e=S.els.get(d.id); let a=Math.atan2(p.x-e.x, -(p.y-e.y))*180/Math.PI; a=Math.round(a/5)*5; if(a>180)a-=360; e.rot=a; d.movio=true; renderMapa(); }
+  else if(d.modo==="pan"){ const r=svg.getBoundingClientRect(), k=S.vb.w/r.width; S.vb.x=d.vx-(ev.clientX-d.sx)*k; S.vb.y=d.vy-(ev.clientY-d.sy)*k; if(Math.abs(ev.clientX-d.sx)+Math.abs(ev.clientY-d.sy)>4) d.movio=true; limitar(); setVB(); }
+});
+async function soltar(){
+  const d=S.drag; S.drag=null; if(!d) return;
+  if(d.modo==="click" || (d.modo==="pan" && !d.movio)){ if(S.sel){ S.sel=null; S.borrar=null; renderTodo(); } return; }
+  if(d.modo==="mover" && d.movio){ const e=S.els.get(d.id); await guardarEl(d.id,{x:e.x,y:e.y}, d.orig); renderPanel(); }
+  if(d.modo==="giro" && d.movio){ const e=S.els.get(d.id); await guardarEl(d.id,{rot:e.rot}, d.orig); renderPanel(); }
+}
+svg.addEventListener("pointerup", soltar);
+svg.addEventListener("pointercancel", soltar);
+svg.addEventListener("wheel", ev => { if(!(ev.ctrlKey||ev.metaKey)) return; ev.preventDefault(); const p=ptSVG(ev); zoom(ev.deltaY>0?1.15:1/1.15, p.x, p.y); }, {passive:false});
+$("zMas").onclick = () => zoom(1/1.35);
+$("zMenos").onclick = () => zoom(1.35);
+$("zAjustar").onclick = () => { S.vb={...VB0}; setVB(); };
+$("btnEditar").onclick = () => {
+  if(!S.canWrite){ toast("Tenés acceso de solo lectura: no podés mover cosas."); return; }
+  S.editar=!S.editar; const b=$("btnEditar"); b.classList.toggle("on",S.editar); b.setAttribute("aria-pressed",S.editar); b.textContent=S.editar?"Listo, dejar de mover":"Mover cosas";
+  svg.classList.toggle("editando",S.editar);
+  $("hint").textContent = S.editar ? "Arrastrá cualquier sector para moverlo. Con un sector elegido, el círculo blanco de arriba lo gira." : "Tocá un sector para ver y cargar su información. Para acomodar el plano, activá «Mover cosas».";
+  renderMapa();
+};
+
+// ---------- agregar ----------
+let menuEl=null;
+function cerrarMenu(){ menuEl?.remove(); menuEl=null; $("btnAgregar").setAttribute("aria-expanded","false"); }
+$("btnAgregar").onclick = ev => {
+  ev.stopPropagation();
+  if(menuEl){ cerrarMenu(); return; }
+  if(!S.canWrite){ toast("Tenés acceso de solo lectura: no podés agregar sectores."); return; }
+  menuEl=document.createElement("div"); menuEl.className="menu"; menuEl.setAttribute("role","menu");
+  menuEl.style.top="40px"; menuEl.style.left="0";
+  menuEl.innerHTML = Object.entries(TIPOS).map(([k,t])=>`<button role="menuitem" data-k="${k}"><i style="background:${t.contorno?"#fff;border:2px solid "+t.color:t.color}"></i>${t.nombre}</button>`).join("");
+  $("btnAgregar").parentElement.appendChild(menuEl); $("btnAgregar").setAttribute("aria-expanded","true");
+  menuEl.onclick = e2 => { const b=e2.target.closest("button"); if(b){ cerrarMenu(); agregar(b.dataset.k); } };
+};
+document.addEventListener("click", ev => { if(menuEl && !menuEl.contains(ev.target)) cerrarMenu(); });
+
+async function agregar(k){
+  if(!S.db) return;
+  const t=TIPOS[k], v=S.vb, maxN=Math.max(0,...[...S.els.values()].map(e=>Number(e.num)||0));
+  const base={tipo:k, nombre:t.nombre, forma:t.forma, color:t.color, x:Math.round(v.x+v.w/2), y:Math.round(v.y+v.h/2), rot:0, num:maxN+1, nota:"", responsable:""};
+  if(t.forma==="rect"){ base.w=t.w; base.h=t.h; } else if(t.forma==="circle") base.r=t.r; else { base.pts=t.pts; base.escala=1; }
+  if(t.cupos){ base.cupos=t.cupos; base.recibe=true; }
+  if(t.contorno) base.contorno=true;
+  try{
+    const ref=S.db.collection("elementos").doc();
+    await ref.set(base);
+    S.els.set(ref.id,{...base,id:ref.id}); S.sel=ref.id; S.tab="sec";
+    if(!S.editar) $("btnEditar").click(); else renderTodo();
+    toast(`${t.nombre} agregado al centro del plano. Arrastralo a su lugar.`);
+  }catch(err){ errEscritura(err); }
+}
+
+// ---------- escritura ----------
+function errEscritura(err){
+  if(err?.code==="invalid_argument"){ S.canWrite=false; S.editar=false; renderTodo(); toast("Tu acceso es de solo lectura: el cambio no se guardó."); }
+  else if(err?.code==="quota_exceeded") toast("Se llenó el espacio de datos del plano. Borrá algo para seguir.");
+  else toast("No se pudo guardar. Probá de nuevo en un momento.");
+}
+async function guardarEl(id, cambios, revertir){
+  const e=S.els.get(id); if(!e) return;
+  Object.assign(e,cambios);
+  try{ await S.db.doc("elementos/"+id).update(cambios); }
+  catch(err){ if(revertir) Object.assign(e,revertir); errEscritura(err); renderTodo(); }
+}
+
+// ---------- panel ----------
+function numHTML(e){ return `<span class="num" style="background:${e.color}">${esc(e.num??"·")}</span>`; }
+function resumen(e){
+  if(e.recibe){ const o=ocupacion(e); return `${o.conf} de ${o.cupos} puestos confirmados${o.total>o.conf?` · ${o.total-o.conf} por confirmar`:""}`; }
+  if(e.tipo==="publico" || (e.forma==="poly")) return `${fmt(m2(e))} m²`;
+  return e.nota ? e.nota.split("\n")[0] : (e.responsable ? `Responsable: ${e.responsable}` : "Sin datos cargados");
+}
+function renderStats(){
+  const ps=sectoresPuestos(), cupos=ps.reduce((a,e)=>a+(e.cupos||0),0);
+  const all=[...S.emps.values()], conf=all.filter(p=>p.estado==="confirmado").length, pend=all.length-conf;
+  let h=`<span class="stat"><b>${conf}</b>/${cupos} puestos confirmados</span>`;
+  if(pend) h+=`<span class="stat"><b>${pend}</b> por confirmar</span>`;
+  const est = !S.conectado ? `<span class="estado"><i></i>${S.cargado?"Sin conexión":"Conectando…"}</span>` :
+      S.canWrite ? `<span class="estado ok"><i></i>${window.planoLocal?"Tus cambios se guardan en este navegador":"Cambios compartidos en vivo"}</span>` : `<span class="estado ro"><i></i>Solo lectura</span>`;
+  $("stats").innerHTML = h + est;
+}
+function renderPanel(){
+  $("tabSec").setAttribute("aria-selected", S.tab==="sec"); $("tabEmp").setAttribute("aria-selected", S.tab==="emp");
+  const pb=$("pbody");
+  const focoId=document.activeElement?.id;
+  if(S.tab==="emp") pb.innerHTML = vistaEmps();
+  else if(S.sel && S.els.get(S.sel)) pb.innerHTML = vistaDetalle(S.els.get(S.sel));
+  else pb.innerHTML = vistaSectores();
+  if(focoId && $(focoId) && pb.contains($(focoId))) { const f=$(focoId); f.focus(); if(f.setSelectionRange && f.type!=="number" && typeof f.value==="string") { try{f.setSelectionRange(f.value.length,f.value.length);}catch{} } }
+}
+function vistaSectores(){
+  const els=ordenados();
+  if(!S.conectado) return `<div class="vacio">${S.cargado?"No hay conexión con los datos del plano. Abrí la página desde claude.ai.":"Cargando sectores…"}</div>`;
+  if(!els.length) return `<div class="vacio">Todavía no hay sectores. Cuando sumes uno con «+ Agregar», aparece acá con su número.</div>`;
+  return `<div class="lista">${els.map(e=>{
+    const o=e.recibe?ocupacion(e):null;
+    return `<button class="item" data-sel="${esc(e.id)}">${numHTML(e)}<span style="min-width:0"><div class="t">${esc(e.nombre)}</div><div class="d">${esc(resumen(e))}</div></span>`+
+      (o&&o.cupos?`<span class="der">${o.conf}/${o.cupos}<div class="minibar"><span style="width:${Math.min(100,o.conf/o.cupos*100)}%"></span></div></span>`:"")+`</button>`;
+  }).join("")}</div>`+
+  (S.canWrite?"":`<div class="ro-note">Estás viendo el plano en modo lectura. Para editarlo, pedile acceso de colaborador a quien lo compartió.</div>`);
+}
+function vistaDetalle(e){
+  const ro=!S.canWrite, dis=ro?"disabled":"", rdo=ro?"readonly":"";
+  let medidas="";
+  if(e.forma==="rect") medidas=`<div class="fila"><label class="campo"><span>Largo (m)</span><input class="inp" id="fW" type="number" step="0.5" min="0.5" value="${(e.w/PX_M).toFixed(1)}" ${dis}></label><label class="campo"><span>Ancho (m)</span><input class="inp" id="fH" type="number" step="0.5" min="0.5" value="${(e.h/PX_M).toFixed(1)}" ${dis}></label></div>`;
+  else if(e.forma==="circle") medidas=`<label class="campo"><span>Diámetro (m)</span><input class="inp" id="fR" type="number" step="0.5" min="0.5" value="${(e.r*2/PX_M).toFixed(1)}" ${dis}></label>`;
+  else medidas=`<label class="campo"><span>Tamaño (${Math.round((e.escala||1)*100)} %)</span><input id="fK" type="range" min="40" max="200" step="5" value="${Math.round((e.escala||1)*100)}" ${dis}></label>`;
+  const area = `${fmt(m2(e))} m²`;
+  const otros=ordenados().filter(x=>x.id!==e.id);
+  let h=`<button class="volver" data-acc="volver">← Todos los sectores</button>
+  <div class="det-head">${numHTML(e)}<input id="fNombre" value="${esc(e.nombre)}" aria-label="Nombre del sector" ${rdo}></div>`;
+  if(e.recibe){
+    const l=empsDe(e.id).sort((a,b)=>(a.estado==="confirmado"?0:1)-(b.estado==="confirmado"?0:1)||String(a.nombre).localeCompare(b.nombre));
+    const o=ocupacion(e);
+    h+=`<div class="acciones" style="justify-content:space-between"><span class="lbl">Emprendedores · ${o.conf}/${o.cupos} confirmados</span>${ro?"":`<button class="btn" data-acc="nuevoEmp" data-sector="${esc(e.id)}">+ Sumar emprendedor</button>`}</div>`;
+    if(S.formEmp && S.formEmp.sector===e.id && !S.formEmp.id) h+=formEmp(S.formEmp);
+    h+= l.length ? `<div class="emps">${l.map(p=>S.formEmp?.id===p.id?formEmp(S.formEmp):tarjetaEmp(p,false)).join("")}</div>` :
+       `<div class="vacio">Todavía no hay emprendedores en este sector. ${ro?"":"Sumá el primero con el botón de arriba."}</div>`;
+    h+=`<hr class="sep">`;
+  }
+  h+=`<label class="campo"><span>Notas</span><textarea class="inp" id="fNota" placeholder="Qué hay que tener en cuenta en este sector" ${rdo}>${esc(e.nota)}</textarea></label>
+  <label class="campo"><span>Responsable</span><input class="inp" id="fResp" value="${esc(e.responsable)}" placeholder="Quién se encarga" ${rdo}></label>`;
+  if(e.recibe) h+=`<label class="campo"><span>Cantidad de puestos</span><input class="inp" id="fCupos" type="number" min="0" max="40" value="${e.cupos||0}" ${dis}></label>`;
+  h+=`<div class="campo"><span>Color</span><div class="swatches">${COLORES.map(c=>`<button class="sw" style="background:${c}" data-color="${c}" aria-label="Color ${c}" aria-pressed="${c.toLowerCase()===String(e.color).toLowerCase()}" ${dis}></button>`).join("")}</div></div>
+  ${medidas}
+  <div class="fila"><label class="campo"><span>Giro (${Math.round(e.rot||0)}°)</span><input id="fRot" type="range" min="-180" max="180" step="5" value="${Math.round(e.rot||0)}" ${dis}></label>
+  <label class="campo"><span>Número en el plano</span><input class="inp" id="fNum" value="${esc(e.num??"")}" ${rdo}></label></div>
+  <div class="area">Superficie: ${area}</div>
+  <label class="campo"><span>Cable hasta</span><select class="inp" id="fCable" ${dis}><option value="">Sin cable</option>${otros.map(x=>`<option value="${esc(x.id)}" ${e.conectaA===x.id?"selected":""}>${esc(x.num??"")} · ${esc(x.nombre)}</option>`).join("")}</select></label>
+  <label class="check"><input type="checkbox" id="fRecibe" ${e.recibe?"checked":""} ${dis}> En este sector van emprendedores</label>`;
+  if(!ro) h+=`<div class="acciones">${S.borrar===e.id?`<span>¿Borrar «${esc(e.nombre)}» del plano?</span><button class="btn danger" data-acc="borrarSi">Sí, borrar</button><button class="btn" data-acc="borrarNo">Cancelar</button>`:`<button class="btn danger" data-acc="borrar">Borrar del plano</button>`}</div>`;
+  else h+=`<div class="ro-note">Modo lectura: podés ver todo, pero no cambiarlo.</div>`;
+  return h;
+}
+function tarjetaEmp(p, conSector){
+  const s=S.els.get(p.sector);
+  return `<button class="emp" data-emp="${esc(p.id)}"><div class="l1"><span class="n">${esc(p.nombre)}</span><span class="pill ${esc(p.estado||"pendiente")}">${esc(p.estado||"pendiente")}</span>${conSector&&s?`<span class="tag" style="background:${s.color}">${esc(s.num??"")} ${esc(s.nombre)}</span>`:""}</div>`+
+    (p.rubro?`<div class="r">${esc(p.rubro)}</div>`:"")+(p.contacto?`<div class="c">${esc(p.contacto)}</div>`:"")+(p.luz?`<div class="luz">⚡ Necesita luz</div>`:"")+(p.notas?`<div class="r">${esc(p.notas)}</div>`:"")+`</button>`;
+}
+function formEmp(f){
+  const ps=sectoresPuestos();
+  return `<form class="form" id="formEmp">
+    <label class="campo"><span>Nombre o emprendimiento</span><input class="inp" id="eNombre" required value="${esc(f.nombre)}" placeholder="Ej.: Pastelería La Ruta"></label>
+    <div class="fila"><label class="campo"><span>Rubro</span><input class="inp" id="eRubro" value="${esc(f.rubro)}" placeholder="Comida, ropa, discos…"></label>
+    <label class="campo"><span>Contacto</span><input class="inp" id="eContacto" value="${esc(f.contacto)}" placeholder="Teléfono o Instagram"></label></div>
+    <div class="fila"><label class="campo"><span>Sector</span><select class="inp" id="eSector"><option value="">Sin asignar</option>${ps.map(s=>`<option value="${esc(s.id)}" ${f.sector===s.id?"selected":""}>${esc(s.num??"")} · ${esc(s.nombre)}</option>`).join("")}</select></label>
+    <label class="campo"><span>Estado</span><select class="inp" id="eEstado">${["consultado","pendiente","confirmado"].map(x=>`<option value="${x}" ${f.estado===x?"selected":""}>${x[0].toUpperCase()+x.slice(1)}</option>`).join("")}</select></label></div>
+    <label class="check"><input type="checkbox" id="eLuz" ${f.luz?"checked":""}> Necesita enchufe / luz</label>
+    <label class="campo"><span>Notas</span><textarea class="inp" id="eNotas" placeholder="Qué trae, medidas, horarios…">${esc(f.notas)}</textarea></label>
+    <div class="acciones"><button class="btn prim" type="submit">${f.id?"Guardar cambios":"Sumar"}</button><button class="btn" type="button" data-acc="cancelarEmp">Cancelar</button>
+    ${f.id?(S.borrar===f.id?`<span style="margin-left:auto">¿Seguro?</span><button class="btn danger" type="button" data-acc="borrarEmpSi">Sí, borrar</button>`:`<button class="btn danger" type="button" data-acc="borrarEmp" style="margin-left:auto">Borrar</button>`):""}</div>
+  </form>`;
+}
+function vistaEmps(){
+  const ro=!S.canWrite;
+  let l=[...S.emps.values()];
+  if(S.filtroEstado!=="todos") l=l.filter(p=>(p.estado||"pendiente")===S.filtroEstado);
+  const q=S.busca.trim().toLowerCase(); if(q) l=l.filter(p=>[p.nombre,p.rubro,p.contacto,p.notas].join(" ").toLowerCase().includes(q));
+  l.sort((a,b)=>String(a.nombre).localeCompare(b.nombre));
+  const cuenta=k=>[...S.emps.values()].filter(p=>k==="todos"||(p.estado||"pendiente")===k).length;
+  let h=`<div class="acciones" style="justify-content:space-between"><input class="inp" id="busca" type="search" placeholder="Buscar por nombre, rubro o contacto" value="${esc(S.busca)}" style="flex:1;min-width:160px">${ro?"":`<button class="btn prim" data-acc="nuevoEmp">+ Sumar</button>`}</div>
+  <div class="filtros">${[["todos","Todos"],["confirmado","Confirmados"],["pendiente","Pendientes"],["consultado","Consultados"]].map(([k,t])=>`<button class="chip" data-filtro="${k}" aria-pressed="${S.filtroEstado===k}">${t} · ${cuenta(k)}</button>`).join("")}</div>`;
+  if(S.formEmp && !S.formEmp.id) h+=formEmp(S.formEmp);
+  if(!S.conectado) h+=`<div class="vacio">${S.cargado?"No hay conexión con los datos.":"Cargando…"}</div>`;
+  else if(!S.emps.size) h+=`<div class="vacio">Acá va la lista de emprendedores del evento: nombre, rubro, contacto, en qué sector están y si ya confirmaron. ${ro?"":"Sumá el primero con «+ Sumar»."}</div>`;
+  else if(!l.length) h+=`<div class="vacio">Nadie coincide con ese filtro.</div>`;
+  else h+=`<div class="emps">${l.map(p=>S.formEmp?.id===p.id?formEmp(S.formEmp):tarjetaEmp(p,true)).join("")}</div>`;
+  return h;
+}
+function renderTodo(){ renderMapa(); renderPanel(); renderStats(); }
+
+// ---------- eventos del panel ----------
+$("tabSec").onclick=()=>{ S.tab="sec"; S.formEmp=null; renderPanel(); };
+$("tabEmp").onclick=()=>{ S.tab="emp"; S.formEmp=null; renderPanel(); };
+const pb=$("pbody");
+pb.addEventListener("click", async ev => {
+  const t=ev.target.closest("[data-sel],[data-acc],[data-color],[data-emp],[data-filtro]"); if(!t) return;
+  if(t.dataset.sel){ S.sel=t.dataset.sel; S.borrar=null; S.formEmp=null; renderTodo(); return; }
+  if(t.dataset.filtro){ S.filtroEstado=t.dataset.filtro; renderPanel(); return; }
+  if(t.dataset.color){ await guardarEl(S.sel,{color:t.dataset.color}); renderTodo(); return; }
+  if(t.dataset.emp){ if(!S.canWrite) return; const p=S.emps.get(t.dataset.emp); S.formEmp={...p}; S.borrar=null; renderPanel(); return; }
+  const a=t.dataset.acc;
+  if(a==="volver"){ S.sel=null; S.formEmp=null; S.borrar=null; renderTodo(); }
+  else if(a==="nuevoEmp"){ S.formEmp={nombre:"",rubro:"",contacto:"",sector:t.dataset.sector||"",estado:"pendiente",luz:false,notas:""}; renderPanel(); $("eNombre")?.focus(); }
+  else if(a==="cancelarEmp"){ S.formEmp=null; S.borrar=null; renderPanel(); }
+  else if(a==="borrar"){ S.borrar=S.sel; renderPanel(); }
+  else if(a==="borrarNo"){ S.borrar=null; renderPanel(); }
+  else if(a==="borrarSi"){ const id=S.sel, nom=S.els.get(id)?.nombre; try{ await S.db.doc("elementos/"+id).delete(); S.els.delete(id); S.sel=null; S.borrar=null; renderTodo(); toast(`«${nom}» se borró del plano.`);}catch(err){errEscritura(err);} }
+  else if(a==="borrarEmp"){ S.borrar=S.formEmp.id; renderPanel(); }
+  else if(a==="borrarEmpSi"){ const id=S.formEmp.id; try{ await S.db.doc("emprendedores/"+id).delete(); S.emps.delete(id); S.formEmp=null; S.borrar=null; renderTodo(); toast("Emprendedor borrado."); }catch(err){errEscritura(err);} }
+});
+pb.addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const f=S.formEmp; if(!f) return;
+  const datos={nombre:$("eNombre").value.trim(), rubro:$("eRubro").value.trim(), contacto:$("eContacto").value.trim(), sector:$("eSector").value,
+    estado:$("eEstado").value, luz:$("eLuz").checked, notas:$("eNotas").value.trim()};
+  if(!datos.nombre){ $("eNombre").focus(); return; }
+  try{
+    if(f.id){ await S.db.doc("emprendedores/"+f.id).update(datos); S.emps.set(f.id,{...S.emps.get(f.id),...datos}); toast("Cambios guardados."); }
+    else { datos.creado=Date.now(); const ref=S.db.collection("emprendedores").doc(); await ref.set(datos); S.emps.set(ref.id,{...datos,id:ref.id}); toast(`${datos.nombre} sumado.`); }
+    S.formEmp=null; renderTodo();
+  }catch(err){ errEscritura(err); }
+});
+pb.addEventListener("input", ev => {
+  if(ev.target.id==="busca"){ S.busca=ev.target.value; renderPanel(); }
+  if(ev.target.id==="fRot" || ev.target.id==="fK"){ const e=S.els.get(S.sel); if(!e) return;
+    if(ev.target.id==="fRot") e.rot=Number(ev.target.value); else e.escala=Number(ev.target.value)/100;
+    ev.target.previousElementSibling.textContent = ev.target.id==="fRot" ? `Giro (${e.rot}°)` : `Tamaño (${Math.round(e.escala*100)} %)`;
+    renderMapa(); }
+  if(S.formEmp && ev.target.closest("#formEmp")){ // conservar lo tipeado si llega un cambio de otro
+    const m={eNombre:"nombre",eRubro:"rubro",eContacto:"contacto",eSector:"sector",eEstado:"estado",eNotas:"notas"};
+    if(m[ev.target.id]) S.formEmp[m[ev.target.id]]=ev.target.value; if(ev.target.id==="eLuz") S.formEmp.luz=ev.target.checked; }
+});
+pb.addEventListener("change", async ev => {
+  const e=S.els.get(S.sel); const id=ev.target.id; if(!e || !id.startsWith("f")) return;
+  const v=ev.target.value, n=Number(v);
+  const map={
+    fNombre:()=>v.trim()?{nombre:v.trim()}:null, fNota:()=>({nota:v}), fResp:()=>({responsable:v.trim()}), fNum:()=>({num:v.trim()===""?null:(isNaN(n)?v.trim():n)}),
+    fW:()=>n>0?{w:Math.round(n*PX_M*10)/10}:null, fH:()=>n>0?{h:Math.round(n*PX_M*10)/10}:null, fR:()=>n>0?{r:Math.round(n/2*PX_M*10)/10}:null,
+    fRot:()=>({rot:n}), fK:()=>({escala:n/100}), fCupos:()=>({cupos:Math.max(0,Math.min(40,Math.round(n)||0))}),
+    fCable:()=>({conectaA:v||null}), fRecibe:()=>({recibe:ev.target.checked, cupos:e.cupos||(ev.target.checked?6:0)}),
+  };
+  const c=map[id]?.(); if(!c) { renderPanel(); return; }
+  await guardarEl(e.id,c); renderTodo();
+});
+
+// ---------- versión sin servidor (GitHub Pages): datos en datos.js + este navegador ----------
+if(window.planoLocal){
+  $("btnDescargar").hidden=false; $("btnOriginal").hidden=false;
+  $("btnDescargar").onclick=()=>{ window.planoLocal.descargar(); toast("Se descargó datos.js. Reemplazá el del repo para que lo vean todos."); };
+  $("btnOriginal").onclick=()=>{
+    const b=$("btnOriginal");
+    if(!b.dataset.seguro){ b.dataset.seguro="1"; b.textContent="¿Seguro? Se pierden tus cambios"; b.classList.add("danger"); setTimeout(()=>{ delete b.dataset.seguro; b.textContent="Plano original"; b.classList.remove("danger"); },4000); return; }
+    delete b.dataset.seguro; b.textContent="Plano original"; b.classList.remove("danger");
+    S.sel=null; S.formEmp=null; window.planoLocal.restaurar(); toast("Volviste al plano guardado en el código.");
+  };
+}
+
+// ---------- arranque ----------
+renderTodo();
+(async () => {
+  const c = window.claude;
+  const [db, user] = await Promise.all([c?.use?.("db") ?? null, c?.use?.("user") ?? null]);
+  S.cargado=true; S.db=db; S.user=user;
+  if(!db){ renderTodo(); return; }
+  let puede=null; try{ puede = user ? await user.can("data.write") : null; }catch{}
+  S.canWrite = puede!==false;
+  let listos=0; const marcar=()=>{ if(++listos===2){ S.conectado=true; } };
+  db.collection("elementos").onSnapshot(snap => {
+    const m=new Map(); snap.docs.forEach(d=>{ const x={...d.data(), id:d.id}; if(S.drag && S.drag.id===d.id){ const loc=S.els.get(d.id); if(loc){ x.x=loc.x; x.y=loc.y; x.rot=loc.rot; } } m.set(d.id,x); });
+    S.els=m; if(S.sel && !m.has(S.sel)) S.sel=null;
+    if(!S.conectado) marcar(); if(S.conectado) { renderMapa(); renderStats(); if(!document.activeElement?.closest?.("#pbody")) renderPanel(); }
+  }, err => { toast("Se cortó la conexión con el plano. Recargá la página."); });
+  db.collection("emprendedores").onSnapshot(snap => {
+    const m=new Map(); snap.docs.forEach(d=>m.set(d.id,{...d.data(), id:d.id})); S.emps=m;
+    if(!S.conectado) marcar(); if(S.conectado){ renderMapa(); renderStats(); if(!document.activeElement?.closest?.("#pbody")) renderPanel(); }
+  }, err => { toast("Se cortó la conexión con los emprendedores. Recargá la página."); });
+})();
+})();
+</script>
+</body></html>
