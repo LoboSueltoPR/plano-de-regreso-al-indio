@@ -46,6 +46,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .bar .sp{flex:1}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;line-height:1.1}
 .btn:hover{background:var(--surface2)}
+a.btn{text-decoration:none;color:inherit}
 .btn.prim{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .btn.sq{width:34px;justify-content:center;padding:7px 0}
@@ -63,7 +64,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;display:flex;flex-direction:column}
 .tabs{display:flex;border-bottom:1px solid var(--line)}
-.tab{flex:1;background:none;border:0;padding:11px 8px;font-family:var(--f-display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.tab{flex:1;background:none;border:0;padding:11px 4px;font-family:var(--f-display);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .pbody{padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 
@@ -118,6 +119,28 @@ textarea.inp{resize:vertical;min-height:64px}
 .menu button{display:flex;gap:8px;align-items:center;border:0;background:none;padding:7px 8px;border-radius:7px;cursor:pointer;text-align:left;font-size:14px}
 .menu button:hover{background:var(--surface2)}
 .menu i{width:14px;height:14px;border-radius:4px;flex:none}
+/* roles: banco de personas arriba (queda a mano al bajar), tarjetas de rol abajo; los nombres se arrastran con mouse o dedo */
+.ayuda{font-size:13px;color:var(--muted);margin:0}
+.banco{position:sticky;top:8px;z-index:2;background:var(--surface);border:2px solid var(--ink);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
+.banco .lbl{display:flex;justify-content:space-between;gap:8px}
+.roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.rol{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--surface);min-width:0}
+.rol.sin{border:2px dashed var(--accent)}
+.rol h3{font-family:var(--f-display);font-weight:700;font-size:18px;text-transform:uppercase;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rol h3 small{font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:500;text-transform:none}
+.rol p{margin:0;font-size:13px;color:var(--muted);line-height:1.3}
+.zona{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;min-height:40px;border-radius:8px;padding:3px;flex:1;cursor:default}
+.zona.over{background:color-mix(in srgb,var(--ok) 14%,transparent);outline:2px dashed var(--ok)}
+.zona .nadie{color:var(--muted);font-size:13px;align-self:center;padding:4px}
+.pers{display:inline-flex;align-items:center;gap:2px;background:var(--surface2);border:2px solid transparent;border-radius:7px;padding:3px 9px;font-size:14px;font-weight:600;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.pers:has(.x){padding-right:2px}
+.pers.dim{opacity:.6;font-weight:500}
+.pers.sel{border-color:var(--focus)}
+.pers.yendo{opacity:.3}
+.pers .cnt{font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:0 6px;margin-left:4px}
+.pers .x{border:0;background:none;color:var(--muted);cursor:pointer;width:22px;height:22px;border-radius:5px;line-height:1;padding:0}
+.pers .x:hover{background:var(--line)}
+.fantasma{position:fixed;z-index:20;pointer-events:none;transform:translate(-50%,-70%) rotate(-3deg);box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;z-index:10;max-width:calc(100vw - 32px)}
 @media (prefers-reduced-motion:no-preference){.item,.btn,.emp{transition:background .12s,border-color .12s}}
 </style>
@@ -139,6 +162,7 @@ textarea.inp{resize:vertical;min-height:64px}
       </div>
       <button class="btn" id="btnDescargar" hidden title="Baja un datos.js con todo lo que cambiaste, para reemplazar el del repo">Descargar datos</button>
       <button class="btn" id="btnOriginal" hidden title="Descarta tus cambios y vuelve al plano guardado en el código">Plano original</button>
+      <a class="btn" id="btnPlanilla" hidden target="_blank" rel="noopener" title="Abre la planilla de Google donde se guarda todo">Abrir planilla</a>
       <span class="sp"></span>
       <button class="btn sq" id="zMenos" aria-label="Alejar">−</button>
       <button class="btn sq" id="zMas" aria-label="Acercar">+</button>
@@ -154,10 +178,11 @@ textarea.inp{resize:vertical;min-height:64px}
     <div class="hint" id="hint">Tocá un sector para ver y cargar su información. Para acomodar el plano, activá «Mover cosas».</div>
   </section>
 
-  <aside class="panel" aria-label="Sectores y emprendedores">
+  <aside class="panel" aria-label="Sectores, emprendedores y roles">
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tabSec" aria-selected="true">Sectores</button>
       <button class="tab" role="tab" id="tabEmp" aria-selected="false">Emprendedores</button>
+      <button class="tab" role="tab" id="tabRol" aria-selected="false">Roles</button>
     </div>
     <div class="pbody" id="pbody"></div>
   </aside>
@@ -166,6 +191,8 @@ textarea.inp{resize:vertical;min-height:64px}
 
 <script src="datos.js"></script>
 <script src="local-db.js"></script>
+<script src="config.js"></script>
+<script src="sheets-db.js"></script>
 <script>
 (() => {
 const PX_M = 3.4;                       // px del mapa por metro (escala del plano base)
@@ -185,7 +212,7 @@ const TIPOS = {
 };
 
 const S = {db:null, user:null, canWrite:false, conectado:false, cargado:false,
-  els:new Map(), emps:new Map(), sel:null, tab:"sec", editar:false,
+  els:new Map(), emps:new Map(), roles:new Map(), personas:new Map(), selPers:null, modo:"", sel:null, tab:"sec", editar:false,
   drag:null, vb:{...VB0}, filtroEstado:"todos", busca:"", formEmp:null, borrar:null};
 
 const $ = id => document.getElementById(id);
@@ -290,7 +317,7 @@ function renderMapa(){
       `<circle id="asaGiro" cx="${hx}" cy="${hy}" r="7" fill="#fff" stroke="#1d1b18" stroke-width="2" style="cursor:alias"><title>Arrastrá para girar</title></circle>`;
   } else $("gAsas").innerHTML = "";
   const v=$("vacioMapa");
-  if(!S.conectado){ v.hidden=false; v.textContent = S.cargado ? "No se pudo conectar con los datos del plano. Abrí la página desde claude.ai para verlo y editarlo." : "Cargando el plano…"; }
+  if(!S.conectado){ v.hidden=false; v.textContent = S.cargado ? "No se pudieron cargar los datos del plano. Recargá la página." : "Cargando el plano…"; }
   else if(S.els.size===0){ v.hidden=false; v.textContent = "Todavía no hay sectores en el plano. Usá «+ Agregar» para sumar el primero."; }
   else v.hidden=true;
 }
@@ -399,21 +426,22 @@ function renderStats(){
   let h=`<span class="stat"><b>${conf}</b>/${cupos} puestos confirmados</span>`;
   if(pend) h+=`<span class="stat"><b>${pend}</b> por confirmar</span>`;
   const est = !S.conectado ? `<span class="estado"><i></i>${S.cargado?"Sin conexión":"Conectando…"}</span>` :
-      S.canWrite ? `<span class="estado ok"><i></i>${window.planoLocal?"Tus cambios se guardan en este navegador":"Cambios compartidos en vivo"}</span>` : `<span class="estado ro"><i></i>Solo lectura</span>`;
+      S.canWrite ? `<span class="estado ok"><i></i>${S.modo==="planilla"?"Conectado a la planilla":S.modo==="local"?"Tus cambios se guardan en este navegador":"Cambios compartidos en vivo"}</span>` : `<span class="estado ro"><i></i>Solo lectura</span>`;
   $("stats").innerHTML = h + est;
 }
 function renderPanel(){
-  $("tabSec").setAttribute("aria-selected", S.tab==="sec"); $("tabEmp").setAttribute("aria-selected", S.tab==="emp");
+  $("tabSec").setAttribute("aria-selected", S.tab==="sec"); $("tabEmp").setAttribute("aria-selected", S.tab==="emp"); $("tabRol").setAttribute("aria-selected", S.tab==="rol");
   const pb=$("pbody");
   const focoId=document.activeElement?.id;
   if(S.tab==="emp") pb.innerHTML = vistaEmps();
+  else if(S.tab==="rol") pb.innerHTML = vistaRoles();
   else if(S.sel && S.els.get(S.sel)) pb.innerHTML = vistaDetalle(S.els.get(S.sel));
   else pb.innerHTML = vistaSectores();
   if(focoId && $(focoId) && pb.contains($(focoId))) { const f=$(focoId); f.focus(); if(f.setSelectionRange && f.type!=="number" && typeof f.value==="string") { try{f.setSelectionRange(f.value.length,f.value.length);}catch{} } }
 }
 function vistaSectores(){
   const els=ordenados();
-  if(!S.conectado) return `<div class="vacio">${S.cargado?"No hay conexión con los datos del plano. Abrí la página desde claude.ai.":"Cargando sectores…"}</div>`;
+  if(!S.conectado) return `<div class="vacio">${S.cargado?"No se pudieron cargar los datos del plano. Recargá la página.":"Cargando sectores…"}</div>`;
   if(!els.length) return `<div class="vacio">Todavía no hay sectores. Cuando sumes uno con «+ Agregar», aparece acá con su número.</div>`;
   return `<div class="lista">${els.map(e=>{
     const o=e.recibe?ocupacion(e):null;
@@ -490,12 +518,124 @@ function vistaEmps(){
   else h+=`<div class="emps">${l.map(p=>S.formEmp?.id===p.id?formEmp(S.formEmp):tarjetaEmp(p,true)).join("")}</div>`;
   return h;
 }
+// ---------- roles ----------
+// En la planilla, cada rol guarda sus personas separadas por comas. «Lala (solo armado)» cuenta como Lala.
+const baseNom = n => String(n).replace(/\s*\(.*\)\s*$/,"").trim();
+const enRol = r => String(r?.personas??"").split(",").map(s=>s.trim()).filter(Boolean);
+const rolesOrden = () => [...S.roles.values()].sort((a,b)=>(Number(a.orden)||99)-(Number(b.orden)||99) || String(a.rol).localeCompare(b.rol));
+function cuentaRoles(){ const c={}; S.roles.forEach(r=>enRol(r).forEach(n=>{ const b=baseNom(n); c[b]=(c[b]||0)+1; })); return c; }
+function todasPersonas(){
+  const lista=[...S.personas.values()].map(p=>String(p.nombre??"").trim()).filter(Boolean);
+  return [...new Set([...lista, ...Object.keys(cuentaRoles())])].sort((a,b)=>a.localeCompare(b,"es"));
+}
+function chip(nombre, desde, o={}){
+  const sel=S.selPers && S.selPers.nombre===nombre && S.selPers.desde===desde;
+  let x="";
+  if(S.canWrite && desde!=="__banco") x=`<button class="x" data-acc="sacarRol" aria-label="Sacar a ${esc(nombre)} de este rol" title="Sacar de este rol">×</button>`;
+  else if(S.canWrite && o.libre) x=`<button class="x" data-acc="borrarPers" aria-label="Borrar a ${esc(nombre)} de la lista" title="Borrar de la lista">×</button>`;
+  return `<span class="pers${o.dim?" dim":""}${sel?" sel":""}" tabindex="0" role="button" data-nombre="${esc(nombre)}" data-desde="${esc(desde)}">${esc(nombre)}${o.cnt>1?`<b class="cnt" title="Está en ${o.cnt} roles">${o.cnt}</b>`:""}${x}</span>`;
+}
+function vistaRoles(){
+  if(!S.conectado) return `<div class="vacio">${S.cargado?"No se pudieron cargar los roles. Recargá la página.":"Cargando…"}</div>`;
+  const ro=!S.canWrite, c=cuentaRoles(), gente=todasPersonas();
+  const libres=gente.filter(n=>!c[n]), ocupados=gente.filter(n=>c[n]);
+  let h=`<p class="ayuda">${ro?"Quién hace qué el domingo.":"Arrastrá cada nombre hasta su rol, con el mouse o con el dedo. También podés tocar un nombre y después tocar el rol. Si lo soltás en «Personas», sale del rol."}</p>
+  <div class="banco"><div class="lbl"><span>Personas</span><span>${libres.length} sin rol · ${gente.length} en total</span></div>
+  <div class="zona" data-rol="__banco">${libres.map(n=>chip(n,"__banco",{libre:true})).join("")}${ocupados.map(n=>chip(n,"__banco",{dim:true,cnt:c[n]})).join("")}${gente.length?"":`<span class="nadie">Todavía no hay nadie en la lista.</span>`}</div>
+  ${ro?"":`<form class="acciones" id="formPers"><input class="inp" id="nuevaPers" placeholder="Sumar a alguien a la lista" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar</button></form>`}</div>`;
+  const rs=rolesOrden();
+  h+= rs.length ? `<div class="roles">${rs.map(r=>{ const l=enRol(r);
+      return `<div class="rol${l.length?"":" sin"}"><h3><span>${esc(r.rol||"Sin nombre")}</span><small>${l.length||"¿quién?"}</small></h3>${r.que?`<p>${esc(r.que)}</p>`:""}`+
+        `<div class="zona" data-rol="${esc(r.id)}">${l.map(n=>chip(n,r.id)).join("")||`<span class="nadie">${ro?"Nadie todavía":"Soltá un nombre acá"}</span>`}</div></div>`; }).join("")}</div>`
+    : `<div class="vacio">Todavía no hay roles cargados.</div>`;
+  if(!ro) h+=`<form class="acciones" id="formRol"><input class="inp" id="nuevoRol" placeholder="Nombre de un rol nuevo" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar rol</button></form>`;
+  return h;
+}
+async function moverPersona(nombre, desde, hacia){
+  S.selPers=null;
+  if(!hacia || desde===hacia || !S.canWrite){ renderPanel(); return; }
+  const cambios=[], nm=baseNom(nombre);
+  if(desde!=="__banco" && S.roles.get(desde)) cambios.push([desde, enRol(S.roles.get(desde)).filter(n=>n!==nombre)]);
+  if(hacia!=="__banco" && S.roles.get(hacia)){
+    const l=enRol(S.roles.get(hacia));
+    if(l.map(baseNom).includes(nm)) toast(`${nm} ya está en ese rol.`); else cambios.push([hacia,[...l,nm]]);
+  }
+  if(!cambios.length){ renderPanel(); return; }
+  cambios.forEach(([id,l])=>{ S.roles.get(id).personas=l.join(", "); });
+  renderPanel();
+  try{ await Promise.all(cambios.map(([id,l])=>S.db.doc("roles/"+id).update({personas:l.join(", ")}))); }
+  catch(err){ errEscritura(err); }
+}
+async function borrarPersona(nombre){
+  const p=[...S.personas.values()].find(x=>String(x.nombre).trim()===nombre); if(!p) return;
+  try{ await S.db.doc("personas/"+p.id).delete(); toast(`${nombre} salió de la lista.`); }catch(err){ errEscritura(err); }
+}
+
+// Arrastre con pointer events: anda igual con mouse y con el dedo. Sin moverse es un toque: elige el nombre.
+let arr=null;
+const zonaEn = (x,y) => document.elementFromPoint(x,y)?.closest?.("#pbody .zona");
+function terminarArrastre(ev, cancelar){
+  if(!arr || ev.pointerId!==arr.id) return;
+  const a=arr; arr=null; clearInterval(a.tic); a.fant?.remove(); a.zona?.classList.remove("over"); a.el.classList.remove("yendo");
+  if(cancelar) return;
+  if(a.movio){ moverPersona(a.nombre, a.desde, zonaEn(ev.clientX,ev.clientY)?.dataset.rol); return; }
+  const mismo=S.selPers && S.selPers.nombre===a.nombre && S.selPers.desde===a.desde;
+  S.selPers = mismo ? null : {nombre:a.nombre, desde:a.desde}; renderPanel();
+}
+window.addEventListener("pointermove", ev => {
+  if(!arr || ev.pointerId!==arr.id) return;
+  if(!arr.movio){
+    if(Math.hypot(ev.clientX-arr.x0, ev.clientY-arr.y0)<6) return;
+    arr.movio=true; arr.el.classList.add("yendo");
+    arr.fant=arr.el.cloneNode(true); arr.fant.classList.remove("sel","yendo"); arr.fant.classList.add("fantasma"); document.body.append(arr.fant);
+    arr.tic=setInterval(()=>{ if(arr?.vy) window.scrollBy(0, arr.vy*14); }, 30); // bajar o subir la página si el dedo llega al borde
+  }
+  ev.preventDefault();
+  arr.fant.style.left=ev.clientX+"px"; arr.fant.style.top=ev.clientY+"px";
+  const z=zonaEn(ev.clientX,ev.clientY);
+  if(z!==arr.zona){ arr.zona?.classList.remove("over"); z?.classList.add("over"); arr.zona=z; }
+  arr.vy = ev.clientY<70 ? -1 : ev.clientY>innerHeight-70 ? 1 : 0;
+});
+window.addEventListener("pointerup", ev => terminarArrastre(ev));
+window.addEventListener("pointercancel", ev => terminarArrastre(ev, true));
+
 function renderTodo(){ renderMapa(); renderPanel(); renderStats(); }
 
 // ---------- eventos del panel ----------
 $("tabSec").onclick=()=>{ S.tab="sec"; S.formEmp=null; renderPanel(); };
 $("tabEmp").onclick=()=>{ S.tab="emp"; S.formEmp=null; renderPanel(); };
+$("tabRol").onclick=()=>{ S.tab="rol"; S.formEmp=null; S.selPers=null; renderPanel(); };
 const pb=$("pbody");
+// roles: arrastrar, tocar nombre y después rol, sacar, sumar
+pb.addEventListener("pointerdown", ev => {
+  const c=ev.target.closest(".pers"); if(!c || ev.target.closest(".x") || !S.canWrite || ev.button>0) return;
+  arr={nombre:c.dataset.nombre, desde:c.dataset.desde, el:c, x0:ev.clientX, y0:ev.clientY, id:ev.pointerId, movio:false, fant:null, zona:null, vy:0};
+});
+pb.addEventListener("click", ev => {
+  if(S.tab!=="rol") return;
+  const x=ev.target.closest(".x");
+  if(x){ const c=x.closest(".pers"); if(x.dataset.acc==="sacarRol") moverPersona(c.dataset.nombre, c.dataset.desde, "__banco"); else borrarPersona(c.dataset.nombre); return; }
+  if(ev.target.closest(".pers")) return; // el toque se resuelve en pointerup
+  const z=ev.target.closest(".zona") || ev.target.closest(".rol")?.querySelector(".zona");
+  if(S.selPers && z) moverPersona(S.selPers.nombre, S.selPers.desde, z.dataset.rol);
+});
+pb.addEventListener("keydown", ev => {
+  const c=ev.target.closest?.(".pers"); if(!c || (ev.key!=="Enter" && ev.key!==" ") || !S.canWrite) return;
+  ev.preventDefault(); const mismo=S.selPers?.nombre===c.dataset.nombre && S.selPers?.desde===c.dataset.desde;
+  S.selPers = mismo ? null : {nombre:c.dataset.nombre, desde:c.dataset.desde}; renderPanel();
+});
+pb.addEventListener("submit", async ev => {
+  if(ev.target.id==="formPers"){
+    ev.preventDefault(); const n=$("nuevaPers").value.trim(); if(!n) return;
+    if(todasPersonas().some(x=>x.toLowerCase()===n.toLowerCase())){ toast(`${n} ya está en la lista.`); return; }
+    try{ await S.db.collection("personas").doc().set({nombre:n}); $("nuevaPers").value=""; renderPanel(); toast(`${n} se sumó a la lista.`); }catch(err){ errEscritura(err); }
+  }
+  if(ev.target.id==="formRol"){
+    ev.preventDefault(); const n=$("nuevoRol").value.trim(); if(!n) return;
+    const orden=Math.max(0,...[...S.roles.values()].map(r=>Number(r.orden)||0))+1;
+    try{ await S.db.collection("roles").doc().set({rol:n, que:"", personas:"", orden}); $("nuevoRol").value=""; renderPanel(); toast(`Rol «${n}» agregado.`); }catch(err){ errEscritura(err); }
+  }
+});
 pb.addEventListener("click", async ev => {
   const t=ev.target.closest("[data-sel],[data-acc],[data-color],[data-emp],[data-filtro]"); if(!t) return;
   if(t.dataset.sel){ S.sel=t.dataset.sel; S.borrar=null; S.formEmp=null; renderTodo(); return; }
@@ -549,7 +689,6 @@ pb.addEventListener("change", async ev => {
 
 // ---------- versión sin servidor (GitHub Pages): datos en datos.js + este navegador ----------
 if(window.planoLocal){
-  $("btnDescargar").hidden=false; $("btnOriginal").hidden=false;
   $("btnDescargar").onclick=()=>{ window.planoLocal.descargar(); toast("Se descargó datos.js. Reemplazá el del repo para que lo vean todos."); };
   $("btnOriginal").onclick=()=>{
     const b=$("btnOriginal");
@@ -565,19 +704,31 @@ renderTodo();
   const c = window.claude;
   const [db, user] = await Promise.all([c?.use?.("db") ?? null, c?.use?.("user") ?? null]);
   S.cargado=true; S.db=db; S.user=user;
+  S.modo = db?.modo==="planilla" ? "planilla" : window.planoLocal ? "local" : "vivo";
+  if(S.modo==="local"){ $("btnDescargar").hidden=false; $("btnOriginal").hidden=false; }
+  if(S.modo==="planilla" && window.planoSheets?.link){ $("btnPlanilla").href=window.planoSheets.link; $("btnPlanilla").hidden=false; }
+  if(window.planoSheets?.fallo) setTimeout(()=>toast("No se pudo conectar con la planilla: tus cambios quedan en este navegador."), 600);
   if(!db){ renderTodo(); return; }
   let puede=null; try{ puede = user ? await user.can("data.write") : null; }catch{}
   S.canWrite = puede!==false;
-  let listos=0; const marcar=()=>{ if(++listos===2){ S.conectado=true; } };
-  db.collection("elementos").onSnapshot(snap => {
+  // No redibujar el panel mientras alguien escribe o arrastra un nombre.
+  const ocupado = () => arr?.movio || (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"") && document.activeElement.closest("#pbody"));
+  const listos=new Set();
+  function escuchar(col, poner, aviso){
+    db.collection(col).onSnapshot(snap => {
+      poner(snap);
+      if(!S.conectado){ listos.add(col); if(listos.size===4) S.conectado=true; }
+      if(S.conectado){ renderMapa(); renderStats(); if(!ocupado()) renderPanel(); }
+    }, err => { toast(aviso); });
+  }
+  const mapa = snap => { const m=new Map(); snap.docs.forEach(d=>m.set(d.id,{...d.data(), id:d.id})); return m; };
+  escuchar("elementos", snap => {
     const m=new Map(); snap.docs.forEach(d=>{ const x=limpiar({...d.data(), id:d.id}); if(S.drag && S.drag.id===d.id){ const loc=S.els.get(d.id); if(loc){ x.x=loc.x; x.y=loc.y; x.rot=loc.rot; } } m.set(d.id,x); });
     S.els=m; if(S.sel && !m.has(S.sel)) S.sel=null;
-    if(!S.conectado) marcar(); if(S.conectado) { renderMapa(); renderStats(); if(!document.activeElement?.closest?.("#pbody")) renderPanel(); }
-  }, err => { toast("Se cortó la conexión con el plano. Recargá la página."); });
-  db.collection("emprendedores").onSnapshot(snap => {
-    const m=new Map(); snap.docs.forEach(d=>m.set(d.id,{...d.data(), id:d.id})); S.emps=m;
-    if(!S.conectado) marcar(); if(S.conectado){ renderMapa(); renderStats(); if(!document.activeElement?.closest?.("#pbody")) renderPanel(); }
-  }, err => { toast("Se cortó la conexión con los emprendedores. Recargá la página."); });
+  }, "Se cortó la conexión con el plano. Recargá la página.");
+  escuchar("emprendedores", snap => { S.emps=mapa(snap); }, "Se cortó la conexión con los emprendedores. Recargá la página.");
+  escuchar("roles", snap => { S.roles=mapa(snap); }, "Se cortó la conexión con los roles. Recargá la página.");
+  escuchar("personas", snap => { S.personas=mapa(snap); }, "Se cortó la conexión con la lista de personas. Recargá la página.");
 })();
 })();
 </script>

@@ -5,15 +5,17 @@
   const clonar = o => JSON.parse(JSON.stringify(o));
   const original = () => {
     const d = clonar(window.DATOS_PLANO || {});
-    return { elementos: d.elementos || {}, emprendedores: d.emprendedores || {} };
+    return { elementos: d.elementos || {}, emprendedores: d.emprendedores || {}, roles: d.roles || {}, personas: d.personas || {} };
   };
 
   let estado = null;
   try { estado = JSON.parse(localStorage.getItem(CLAVE)); } catch (e) {}
   if (!estado || typeof estado.elementos !== "object") estado = original();
   estado.emprendedores ||= {};
+  // Guardados de antes de los roles: tomarlos de datos.js
+  if (!estado.roles) { const o = original(); estado.roles = o.roles; estado.personas = o.personas; }
 
-  const subs = { elementos: [], emprendedores: [] };
+  const subs = {};
   function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} }
   function foto(col) {
     return { docs: Object.entries(estado[col] || {}).map(([id, d]) => ({ id, exists: true, data: () => d })) };

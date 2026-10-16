@@ -192,5 +192,153 @@ window.DATOS_PLANO = {
       "responsable": "Fran y Guille (sonido)"
     }
   },
-  "emprendedores": {}
+  "emprendedores": {},
+  "roles": {
+    "presentacion": {
+      "rol": "Presentación",
+      "que": "Conducir, presentar la banda, palabras del medio.",
+      "personas": "Charito",
+      "orden": 1
+    },
+    "banda": {
+      "rol": "Banda",
+      "que": "Contacto con Scaramanzia, horarios, qué necesitan.",
+      "personas": "Lobo",
+      "orden": 2
+    },
+    "sonido": {
+      "rol": "Sonido",
+      "que": "Qué pone la banda y qué ponemos nosotros.",
+      "personas": "Fran, Guille",
+      "orden": 3
+    },
+    "cobertura": {
+      "rol": "Cobertura",
+      "que": "Fotos y video del día y del previo.",
+      "personas": "Tyler, Tino",
+      "orden": 4
+    },
+    "emprendedores": {
+      "rol": "Emprendedores",
+      "que": "Formulario, puestos, mesa propia, ¿gazebo?",
+      "personas": "Luni, Lauti Rios, Nicky Polo, Lala, Clari",
+      "orden": 5
+    },
+    "serigrafia": {
+      "rol": "Serigrafía",
+      "que": "Remeras lisas y estampado en vivo.",
+      "personas": "Luni, Morita",
+      "orden": 6
+    },
+    "gente": {
+      "rol": "A cargo de la gente",
+      "que": "Recibir y orientar.",
+      "personas": "Cami M., José, Mari, Valen",
+      "orden": 7
+    },
+    "catering": {
+      "rol": "Catering de músicos",
+      "que": "Comida y bebida de banda y organización.",
+      "personas": "Pauli, Tino, Rope, ValenBau / Cala",
+      "orden": 8
+    },
+    "armado": {
+      "rol": "Armado y desarme",
+      "que": "Desde las 13 y hasta las 22.",
+      "personas": "Lala (solo armado), Charo, Zaira, Cami Álvarez, Mel, Juan",
+      "orden": 9
+    },
+    "prensa": {
+      "rol": "Prensa y difusión",
+      "que": "Mapa de actores, medios, afiches.",
+      "personas": "Guigui, Tony, Anto, COM",
+      "orden": 10
+    }
+  },
+  "personas": {
+    "charito": {
+      "nombre": "Charito"
+    },
+    "charo": {
+      "nombre": "Charo"
+    },
+    "lobo": {
+      "nombre": "Lobo"
+    },
+    "fran": {
+      "nombre": "Fran"
+    },
+    "guille": {
+      "nombre": "Guille"
+    },
+    "guigui": {
+      "nombre": "Guigui"
+    },
+    "com": {
+      "nombre": "COM"
+    },
+    "luni": {
+      "nombre": "Luni"
+    },
+    "lauti-rios": {
+      "nombre": "Lauti Rios"
+    },
+    "nicky-polo": {
+      "nombre": "Nicky Polo"
+    },
+    "lala": {
+      "nombre": "Lala"
+    },
+    "cami-m": {
+      "nombre": "Cami M."
+    },
+    "cami-alvarez": {
+      "nombre": "Cami Álvarez"
+    },
+    "jose": {
+      "nombre": "José"
+    },
+    "mari": {
+      "nombre": "Mari"
+    },
+    "pauli": {
+      "nombre": "Pauli"
+    },
+    "tino": {
+      "nombre": "Tino"
+    },
+    "rope": {
+      "nombre": "Rope"
+    },
+    "zaira": {
+      "nombre": "Zaira"
+    },
+    "mel": {
+      "nombre": "Mel"
+    },
+    "juan": {
+      "nombre": "Juan"
+    },
+    "valenbau-cala": {
+      "nombre": "ValenBau / Cala"
+    },
+    "clari": {
+      "nombre": "Clari"
+    },
+    "morita": {
+      "nombre": "Morita"
+    },
+    "tony": {
+      "nombre": "Tony"
+    },
+    "anto": {
+      "nombre": "Anto"
+    },
+    "valen": {
+      "nombre": "Valen"
+    },
+    "tyler": {
+      "nombre": "Tyler"
+    }
+  }
 };
