@@ -152,9 +152,14 @@ textarea.inp{resize:vertical;min-height:64px}
 .tarea.hecha{opacity:.6}
 .tarea.hecha .tt{text-decoration:line-through}
 .tarea .tcab{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
-.tarea .check{align-items:flex-start;font-weight:600;font-size:15px;cursor:pointer}
-.tarea .check input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--ok)}
+.tarea .hecho{width:18px;height:18px;margin:3px 0 0;flex:none;accent-color:var(--ok);cursor:pointer}
+.tarea .tt{flex:1;min-width:0;font-weight:600;font-size:15px}
 .tarea p{margin:0 0 0 26px;font-size:13px;color:var(--muted)}
+.edit{font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:6px;padding:1px 5px;margin:-2px 0;resize:none;overflow:hidden;field-sizing:content;width:100%;min-width:0;display:block;cursor:text}
+.edit:hover{border-color:var(--line)}
+.edit:focus{border-color:var(--focus);background:var(--bg);outline:none}
+.edit.det{font-size:13px;color:var(--muted);margin:-3px 0 0 21px;width:calc(100% - 21px)}
+.edit.det::placeholder{color:var(--muted);opacity:.6}
 .tarea .zona{min-height:34px;margin-left:22px}
 .xt{border:0;background:none;color:var(--muted);cursor:pointer;width:24px;height:24px;border-radius:5px;flex:none;font-size:16px;line-height:1}
 .xt:hover{background:var(--surface2)}
@@ -455,7 +460,7 @@ function renderPanel(){
   const focoId=document.activeElement?.id;
   if(S.tab==="emp") pb.innerHTML = vistaEmps();
   else if(S.tab==="rol") pb.innerHTML = vistaRoles();
-  else if(S.tab==="tar") pb.innerHTML = vistaTareas();
+  else if(S.tab==="tar"){ pb.innerHTML = vistaTareas(); pb.querySelectorAll("textarea.edit").forEach(ajustarAlto); }
   else if(S.sel && S.els.get(S.sel)) pb.innerHTML = vistaDetalle(S.els.get(S.sel));
   else pb.innerHTML = vistaSectores();
   if(focoId && $(focoId) && pb.contains($(focoId))) { const f=$(focoId); f.focus(); if(f.setSelectionRange && f.type!=="number" && typeof f.value==="string") { try{f.setSelectionRange(f.value.length,f.value.length);}catch{} } }
@@ -578,13 +583,21 @@ function vistaRoles(){
   if(!ro) h+=`<form class="acciones" id="formRol"><input class="inp" id="nuevoRol" placeholder="Nombre de un rol nuevo" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar rol</button></form>`;
   return h;
 }
+// Alto justo para el texto (los navegadores sin field-sizing:content)
+const SIZING = CSS.supports?.("field-sizing","content");
+function ajustarAlto(el){ if(SIZING) return; el.style.height="auto"; el.style.height=el.scrollHeight+"px"; }
 function tarjetaTarea(t){
   const ro=!S.canWrite, l=enLista(t), id=esc(t.id);
   const borrar = ro ? "" : S.borrar==="t:"+t.id
     ? `<span class="acciones"><button class="btn danger mini" type="button" data-acc="borrarTareaSi" data-tarea="${id}">Borrar</button><button class="btn mini" type="button" data-acc="borrarNo">No</button></span>`
     : `<button class="xt" type="button" data-acc="borrarTarea" data-tarea="${id}" aria-label="Borrar «${esc(t.tarea)}»" title="Borrar">×</button>`;
-  return `<div class="tarea${t.hecho?" hecha":""}${l.length?"":" sin"}"><div class="tcab"><label class="check"><input type="checkbox" class="hecho" data-tarea="${id}" ${t.hecho?"checked":""} ${ro?"disabled":""}><span class="tt">${esc(t.tarea||"Sin nombre")}</span></label>${borrar}</div>`+
-    (t.detalle?`<p>${esc(t.detalle)}</p>`:"")+
+  // Nombre y detalle se editan tocándolos: parecen texto hasta que tienen el foco (Enter guarda, Esc cancela).
+  const nombre = ro ? `<span class="tt">${esc(t.tarea||"Sin nombre")}</span>`
+    : `<textarea class="edit tt" id="tt-${id}" rows="1" data-campo="tarea" data-tarea="${id}" aria-label="Nombre de la tarea" spellcheck="false">${esc(t.tarea)}</textarea>`;
+  const detalle = ro ? (t.detalle?`<p>${esc(t.detalle)}</p>`:"")
+    : `<textarea class="edit det" id="td-${id}" rows="1" data-campo="detalle" data-tarea="${id}" placeholder="+ detalle" aria-label="Detalle de «${esc(t.tarea)}»">${esc(t.detalle)}</textarea>`;
+  return `<div class="tarea${t.hecho?" hecha":""}${l.length?"":" sin"}"><div class="tcab"><input type="checkbox" class="hecho" data-tarea="${id}" ${t.hecho?"checked":""} ${ro?"disabled":""} aria-label="Lista: ${esc(t.tarea)}">${nombre}${borrar}</div>`+
+    detalle+
     `<div class="zona" data-dest="tareas/${id}">${l.map(n=>chip(n,"tareas/"+t.id)).join("")||`<span class="nadie">${ro?"Nadie a cargo":"¿Quién se encarga? Soltá un nombre"}</span>`}</div></div>`;
 }
 function vistaTareas(){
@@ -681,17 +694,34 @@ pb.addEventListener("click", async ev => {
   if(b?.dataset.acc==="borrarTarea"){ S.borrar="t:"+b.dataset.tarea; renderPanel(); return; }
   if(b?.dataset.acc==="borrarTareaSi"){ const t=S.tareas.get(b.dataset.tarea); S.borrar=null; if(!t) return;
     try{ await S.db.doc("tareas/"+t.id).delete(); toast(`«${t.tarea}» se borró.`); }catch(err){ errEscritura(err); } return; }
-  if(ev.target.closest(".pers,input,button,label,select,form")) return; // el toque en un nombre se resuelve en pointerup
+  if(ev.target.closest(".pers,input,textarea,button,label,select,form")) return; // el toque en un nombre se resuelve en pointerup
   const z=ev.target.closest(".zona") || ev.target.closest(".rol,.tarea")?.querySelector(".zona");
   if(S.selPers && z) moverPersona(S.selPers.nombre, S.selPers.desde, z.dataset.dest);
 });
 pb.addEventListener("change", async ev => {
   if(ev.target.id==="quienTar"){ S.quien=ev.target.value; renderPanel(); return; }
+  const ed=ev.target.closest?.(".edit");
+  if(ed){
+    const t=S.tareas.get(ed.dataset.tarea), campo=ed.dataset.campo; if(!t) return;
+    const v=ed.value.replace(/\s*\n\s*/g," ").trim();
+    if(campo==="tarea" && !v){ ed.value=t.tarea||""; toast("La tarea necesita un nombre. Para sacarla, usá la ×."); return; }
+    if(v===(t[campo]||"")) return;
+    t[campo]=v;
+    try{ await S.db.doc("tareas/"+t.id).update({[campo]:v}); toast("Guardado."); }catch(err){ errEscritura(err); }
+    return;
+  }
   const c=ev.target.closest?.(".hecho"); if(!c) return;
   const t=S.tareas.get(c.dataset.tarea); if(!t) return;
   t.hecho=c.checked; renderPanel();
   try{ await S.db.doc("tareas/"+t.id).update({hecho:c.checked}); }catch(err){ errEscritura(err); }
 });
+// Textos editables de tareas: Enter guarda (al salir del campo), Esc vuelve a lo que había.
+pb.addEventListener("keydown", ev => {
+  const ed=ev.target.closest?.(".edit"); if(!ed) return;
+  if(ev.key==="Enter" && !ev.shiftKey){ ev.preventDefault(); ed.blur(); }
+  else if(ev.key==="Escape"){ const t=S.tareas.get(ed.dataset.tarea); ed.value=t?.[ed.dataset.campo]||""; ajustarAlto(ed); ed.blur(); }
+});
+pb.addEventListener("input", ev => { if(ev.target.classList?.contains("edit")) ajustarAlto(ev.target); });
 pb.addEventListener("keydown", ev => {
   const c=ev.target.closest?.(".pers"); if(!c || (ev.key!=="Enter" && ev.key!==" ") || !S.canWrite) return;
   ev.preventDefault(); const mismo=S.selPers?.nombre===c.dataset.nombre && S.selPers?.desde===c.dataset.desde;
