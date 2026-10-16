@@ -218,6 +218,19 @@ function puntoMasCercano(e, px, py){ // punto del borde de e más cercano a (px,
   return [e.x+qx*c2-qy*s2, e.y+qx*s2+qy*c2];
 }
 
+// Los datos vienen de otros usuarios: color y números se validan antes de ir al SVG/HTML.
+const COLOR_OK = /^#[0-9a-fA-F]{3,8}$/;
+function limpiar(x){
+  const num = (v,def) => Number.isFinite(Number(v)) ? Number(v) : def;
+  x.color = COLOR_OK.test(String(x.color)) ? x.color : "#444444";
+  x.x=num(x.x,391); x.y=num(x.y,484); x.rot=num(x.rot,0);
+  if(x.forma==="rect"){ x.w=num(x.w,20); x.h=num(x.h,10); }
+  else if(x.forma==="circle") x.r=num(x.r,8);
+  else { x.forma="poly"; x.escala=num(x.escala,1); x.pts=(Array.isArray(x.pts)?x.pts:[]).map(p=>[num(p?.[0],0),num(p?.[1],0)]); if(x.pts.length<3) x.pts=[[-20,-20],[20,-20],[20,20],[-20,20]]; }
+  if(x.cupos!=null) x.cupos=Math.max(0,Math.min(40,Math.round(num(x.cupos,0))));
+  return x;
+}
+
 // ---------- datos derivados ----------
 const ordenados = () => [...S.els.values()].sort((a,b)=>(a.num??99)-(b.num??99) || String(a.nombre).localeCompare(b.nombre));
 const sectoresPuestos = () => ordenados().filter(e=>e.recibe);
@@ -557,7 +570,7 @@ renderTodo();
   S.canWrite = puede!==false;
   let listos=0; const marcar=()=>{ if(++listos===2){ S.conectado=true; } };
   db.collection("elementos").onSnapshot(snap => {
-    const m=new Map(); snap.docs.forEach(d=>{ const x={...d.data(), id:d.id}; if(S.drag && S.drag.id===d.id){ const loc=S.els.get(d.id); if(loc){ x.x=loc.x; x.y=loc.y; x.rot=loc.rot; } } m.set(d.id,x); });
+    const m=new Map(); snap.docs.forEach(d=>{ const x=limpiar({...d.data(), id:d.id}); if(S.drag && S.drag.id===d.id){ const loc=S.els.get(d.id); if(loc){ x.x=loc.x; x.y=loc.y; x.rot=loc.rot; } } m.set(d.id,x); });
     S.els=m; if(S.sel && !m.has(S.sel)) S.sel=null;
     if(!S.conectado) marcar(); if(S.conectado) { renderMapa(); renderStats(); if(!document.activeElement?.closest?.("#pbody")) renderPanel(); }
   }, err => { toast("Se cortó la conexión con el plano. Recargá la página."); });
