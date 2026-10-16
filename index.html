@@ -64,7 +64,7 @@ a.btn{text-decoration:none;color:inherit}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0;display:flex;flex-direction:column}
 .tabs{display:flex;border-bottom:1px solid var(--line)}
-.tab{flex:1;background:none;border:0;padding:11px 4px;font-family:var(--f-display);font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+.tab{flex:1 1 auto;background:none;border:0;padding:11px 4px;font-family:var(--f-display);font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .pbody{padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 
@@ -140,6 +140,25 @@ textarea.inp{resize:vertical;min-height:64px}
 .pers .cnt{font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:0 6px;margin-left:4px}
 .pers .x{border:0;background:none;color:var(--muted);cursor:pointer;width:22px;height:22px;border-radius:5px;line-height:1;padding:0}
 .pers .x:hover{background:var(--line)}
+/* tareas: agrupadas (cosas a llevar, feriantes, durante el evento); borde ámbar = nadie a cargo, tachada = lista */
+.progreso{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.progreso .minibar{flex:1;min-width:80px;width:auto;margin:0}
+.grupo{display:flex;flex-direction:column;gap:8px}
+.gtit{font-family:var(--f-display);font-weight:700;font-size:19px;text-transform:uppercase;margin:4px 0 0;display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:3px}
+.gtit small{font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:500;text-transform:none}
+.grupo>.nadie{color:var(--muted);font-size:13px}
+.tarea{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;background:var(--surface)}
+.tarea.sin{border-left:4px solid var(--warn)}
+.tarea.hecha{opacity:.6}
+.tarea.hecha .tt{text-decoration:line-through}
+.tarea .tcab{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.tarea .check{align-items:flex-start;font-weight:600;font-size:15px;cursor:pointer}
+.tarea .check input{width:18px;height:18px;margin:1px 0 0;flex:none;accent-color:var(--ok)}
+.tarea p{margin:0 0 0 26px;font-size:13px;color:var(--muted)}
+.tarea .zona{min-height:34px;margin-left:22px}
+.xt{border:0;background:none;color:var(--muted);cursor:pointer;width:24px;height:24px;border-radius:5px;flex:none;font-size:16px;line-height:1}
+.xt:hover{background:var(--surface2)}
+.btn.mini{padding:3px 8px;font-size:13px}
 .fantasma{position:fixed;z-index:20;pointer-events:none;transform:translate(-50%,-70%) rotate(-3deg);box-shadow:0 8px 20px rgba(0,0,0,.25)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;z-index:10;max-width:calc(100vw - 32px)}
 @media (prefers-reduced-motion:no-preference){.item,.btn,.emp{transition:background .12s,border-color .12s}}
@@ -183,6 +202,7 @@ textarea.inp{resize:vertical;min-height:64px}
       <button class="tab" role="tab" id="tabSec" aria-selected="true">Sectores</button>
       <button class="tab" role="tab" id="tabEmp" aria-selected="false">Emprendedores</button>
       <button class="tab" role="tab" id="tabRol" aria-selected="false">Roles</button>
+      <button class="tab" role="tab" id="tabTar" aria-selected="false">Tareas</button>
     </div>
     <div class="pbody" id="pbody"></div>
   </aside>
@@ -212,7 +232,7 @@ const TIPOS = {
 };
 
 const S = {db:null, user:null, canWrite:false, conectado:false, cargado:false,
-  els:new Map(), emps:new Map(), roles:new Map(), personas:new Map(), selPers:null, modo:"", sel:null, tab:"sec", editar:false,
+  els:new Map(), emps:new Map(), roles:new Map(), personas:new Map(), tareas:new Map(), selPers:null, fTar:"todas", quien:"", modo:"", sel:null, tab:"sec", editar:false,
   drag:null, vb:{...VB0}, filtroEstado:"todos", busca:"", formEmp:null, borrar:null};
 
 const $ = id => document.getElementById(id);
@@ -430,11 +450,12 @@ function renderStats(){
   $("stats").innerHTML = h + est;
 }
 function renderPanel(){
-  $("tabSec").setAttribute("aria-selected", S.tab==="sec"); $("tabEmp").setAttribute("aria-selected", S.tab==="emp"); $("tabRol").setAttribute("aria-selected", S.tab==="rol");
+  $("tabSec").setAttribute("aria-selected", S.tab==="sec"); $("tabEmp").setAttribute("aria-selected", S.tab==="emp"); $("tabRol").setAttribute("aria-selected", S.tab==="rol"); $("tabTar").setAttribute("aria-selected", S.tab==="tar");
   const pb=$("pbody");
   const focoId=document.activeElement?.id;
   if(S.tab==="emp") pb.innerHTML = vistaEmps();
   else if(S.tab==="rol") pb.innerHTML = vistaRoles();
+  else if(S.tab==="tar") pb.innerHTML = vistaTareas();
   else if(S.sel && S.els.get(S.sel)) pb.innerHTML = vistaDetalle(S.els.get(S.sel));
   else pb.innerHTML = vistaSectores();
   if(focoId && $(focoId) && pb.contains($(focoId))) { const f=$(focoId); f.focus(); if(f.setSelectionRange && f.type!=="number" && typeof f.value==="string") { try{f.setSelectionRange(f.value.length,f.value.length);}catch{} } }
@@ -518,52 +539,91 @@ function vistaEmps(){
   else h+=`<div class="emps">${l.map(p=>S.formEmp?.id===p.id?formEmp(S.formEmp):tarjetaEmp(p,true)).join("")}</div>`;
   return h;
 }
-// ---------- roles ----------
-// En la planilla, cada rol guarda sus personas separadas por comas. «Lala (solo armado)» cuenta como Lala.
+// ---------- roles y tareas ----------
+// Roles y tareas guardan sus personas separadas por comas (columna «personas» de la planilla). «Lala (solo armado)» cuenta como Lala.
 const baseNom = n => String(n).replace(/\s*\(.*\)\s*$/,"").trim();
-const enRol = r => String(r?.personas??"").split(",").map(s=>s.trim()).filter(Boolean);
-const rolesOrden = () => [...S.roles.values()].sort((a,b)=>(Number(a.orden)||99)-(Number(b.orden)||99) || String(a.rol).localeCompare(b.rol));
-function cuentaRoles(){ const c={}; S.roles.forEach(r=>enRol(r).forEach(n=>{ const b=baseNom(n); c[b]=(c[b]||0)+1; })); return c; }
+const enLista = r => String(r?.personas??"").split(",").map(s=>s.trim()).filter(Boolean);
+const porOrden = m => [...m.values()].sort((a,b)=>(Number(a.orden)||999)-(Number(b.orden)||999) || String(a.rol??a.tarea).localeCompare(String(b.rol??b.tarea)));
+const coleccion = col => col==="roles" ? S.roles : col==="tareas" ? S.tareas : null;
+const destino = d => { const i=d.indexOf("/"); return [d.slice(0,i), d.slice(i+1)]; }; // "roles/sonido" → ["roles","sonido"]
+function cuenta(col){ const c={}; coleccion(col).forEach(r=>enLista(r).forEach(n=>{ const b=baseNom(n); c[b]=(c[b]||0)+1; })); return c; }
 function todasPersonas(){
   const lista=[...S.personas.values()].map(p=>String(p.nombre??"").trim()).filter(Boolean);
-  return [...new Set([...lista, ...Object.keys(cuentaRoles())])].sort((a,b)=>a.localeCompare(b,"es"));
+  return [...new Set([...lista, ...Object.keys(cuenta("roles")), ...Object.keys(cuenta("tareas"))])].sort((a,b)=>a.localeCompare(b,"es"));
 }
 function chip(nombre, desde, o={}){
   const sel=S.selPers && S.selPers.nombre===nombre && S.selPers.desde===desde;
   let x="";
-  if(S.canWrite && desde!=="__banco") x=`<button class="x" data-acc="sacarRol" aria-label="Sacar a ${esc(nombre)} de este rol" title="Sacar de este rol">×</button>`;
+  if(S.canWrite && desde!=="__banco") x=`<button class="x" data-acc="sacarPers" aria-label="Sacar a ${esc(nombre)} de acá" title="Sacar de acá">×</button>`;
   else if(S.canWrite && o.libre) x=`<button class="x" data-acc="borrarPers" aria-label="Borrar a ${esc(nombre)} de la lista" title="Borrar de la lista">×</button>`;
-  return `<span class="pers${o.dim?" dim":""}${sel?" sel":""}" tabindex="0" role="button" data-nombre="${esc(nombre)}" data-desde="${esc(desde)}">${esc(nombre)}${o.cnt>1?`<b class="cnt" title="Está en ${o.cnt} roles">${o.cnt}</b>`:""}${x}</span>`;
+  return `<span class="pers${o.dim?" dim":""}${sel?" sel":""}" tabindex="0" role="button" data-nombre="${esc(nombre)}" data-desde="${esc(desde)}">${esc(nombre)}${o.cnt>1?`<b class="cnt" title="Aparece ${o.cnt} veces">${o.cnt}</b>`:""}${x}</span>`;
+}
+// Lista de personas (arriba, queda fija al bajar). Atenuados: ya tienen algo en esta pestaña.
+function banco(col){
+  const c=cuenta(col), cr=cuenta("roles"), ct=cuenta("tareas"), gente=todasPersonas();
+  const libres=gente.filter(n=>!c[n]), ocupados=gente.filter(n=>c[n]);
+  return `<div class="banco"><div class="lbl"><span>Personas</span><span>${libres.length} ${col==="roles"?"sin rol":"sin tarea"} · ${gente.length} en total</span></div>
+  <div class="zona" data-dest="__banco">${libres.map(n=>chip(n,"__banco",{libre:!cr[n]&&!ct[n]})).join("")}${ocupados.map(n=>chip(n,"__banco",{dim:true,cnt:c[n]})).join("")}${gente.length?"":`<span class="nadie">Todavía no hay nadie en la lista.</span>`}</div>
+  ${S.canWrite?`<form class="acciones" id="formPers"><input class="inp" id="nuevaPers" placeholder="Sumar a alguien a la lista" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar</button></form>`:""}</div>`;
 }
 function vistaRoles(){
   if(!S.conectado) return `<div class="vacio">${S.cargado?"No se pudieron cargar los roles. Recargá la página.":"Cargando…"}</div>`;
-  const ro=!S.canWrite, c=cuentaRoles(), gente=todasPersonas();
-  const libres=gente.filter(n=>!c[n]), ocupados=gente.filter(n=>c[n]);
-  let h=`<p class="ayuda">${ro?"Quién hace qué el domingo.":"Arrastrá cada nombre hasta su rol, con el mouse o con el dedo. También podés tocar un nombre y después tocar el rol. Si lo soltás en «Personas», sale del rol."}</p>
-  <div class="banco"><div class="lbl"><span>Personas</span><span>${libres.length} sin rol · ${gente.length} en total</span></div>
-  <div class="zona" data-rol="__banco">${libres.map(n=>chip(n,"__banco",{libre:true})).join("")}${ocupados.map(n=>chip(n,"__banco",{dim:true,cnt:c[n]})).join("")}${gente.length?"":`<span class="nadie">Todavía no hay nadie en la lista.</span>`}</div>
-  ${ro?"":`<form class="acciones" id="formPers"><input class="inp" id="nuevaPers" placeholder="Sumar a alguien a la lista" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar</button></form>`}</div>`;
-  const rs=rolesOrden();
-  h+= rs.length ? `<div class="roles">${rs.map(r=>{ const l=enRol(r);
+  const ro=!S.canWrite;
+  let h=`<p class="ayuda">${ro?"Quién hace qué el domingo.":"Arrastrá cada nombre hasta su rol, con el mouse o con el dedo. También podés tocar un nombre y después tocar el rol. Si lo soltás en «Personas», sale del rol."}</p>`+banco("roles");
+  const rs=porOrden(S.roles);
+  h+= rs.length ? `<div class="roles">${rs.map(r=>{ const l=enLista(r);
       return `<div class="rol${l.length?"":" sin"}"><h3><span>${esc(r.rol||"Sin nombre")}</span><small>${l.length||"¿quién?"}</small></h3>${r.que?`<p>${esc(r.que)}</p>`:""}`+
-        `<div class="zona" data-rol="${esc(r.id)}">${l.map(n=>chip(n,r.id)).join("")||`<span class="nadie">${ro?"Nadie todavía":"Soltá un nombre acá"}</span>`}</div></div>`; }).join("")}</div>`
+        `<div class="zona" data-dest="roles/${esc(r.id)}">${l.map(n=>chip(n,"roles/"+r.id)).join("")||`<span class="nadie">${ro?"Nadie todavía":"Soltá un nombre acá"}</span>`}</div></div>`; }).join("")}</div>`
     : `<div class="vacio">Todavía no hay roles cargados.</div>`;
   if(!ro) h+=`<form class="acciones" id="formRol"><input class="inp" id="nuevoRol" placeholder="Nombre de un rol nuevo" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+ Sumar rol</button></form>`;
+  return h;
+}
+function tarjetaTarea(t){
+  const ro=!S.canWrite, l=enLista(t), id=esc(t.id);
+  const borrar = ro ? "" : S.borrar==="t:"+t.id
+    ? `<span class="acciones"><button class="btn danger mini" type="button" data-acc="borrarTareaSi" data-tarea="${id}">Borrar</button><button class="btn mini" type="button" data-acc="borrarNo">No</button></span>`
+    : `<button class="xt" type="button" data-acc="borrarTarea" data-tarea="${id}" aria-label="Borrar «${esc(t.tarea)}»" title="Borrar">×</button>`;
+  return `<div class="tarea${t.hecho?" hecha":""}${l.length?"":" sin"}"><div class="tcab"><label class="check"><input type="checkbox" class="hecho" data-tarea="${id}" ${t.hecho?"checked":""} ${ro?"disabled":""}><span class="tt">${esc(t.tarea||"Sin nombre")}</span></label>${borrar}</div>`+
+    (t.detalle?`<p>${esc(t.detalle)}</p>`:"")+
+    `<div class="zona" data-dest="tareas/${id}">${l.map(n=>chip(n,"tareas/"+t.id)).join("")||`<span class="nadie">${ro?"Nadie a cargo":"¿Quién se encarga? Soltá un nombre"}</span>`}</div></div>`;
+}
+function vistaTareas(){
+  if(!S.conectado) return `<div class="vacio">${S.cargado?"No se pudieron cargar las tareas. Recargá la página.":"Cargando…"}</div>`;
+  const ro=!S.canWrite, todas=porOrden(S.tareas);
+  const listas=todas.filter(t=>t.hecho).length, sinNadie=todas.filter(t=>!enLista(t).length).length;
+  let h=`<p class="ayuda">${ro?"Cosas para llevar y para no olvidarse.":"Cosas para llevar y para no olvidarse. Arrastrá un nombre hasta la tarea para dejarla a su cargo, y tildala cuando esté lista."}</p>`;
+  if(S.modo==="planilla" && !window.planoSheets?.cols?.includes("tareas")) h+=`<div class="ro-note">La planilla todavía no tiene la pestaña de tareas: hay que actualizar el script (README, «Si cambiás Codigo.gs»). Hasta entonces, las tareas no se guardan.</div>`;
+  h+=`<div class="progreso"><span><b>${listas}</b> de ${todas.length} listas</span>${sinNadie?`<span><b>${sinNadie}</b> sin nadie a cargo</span>`:""}<div class="minibar"><span style="width:${todas.length?listas/todas.length*100:0}%"></span></div></div>`;
+  h+=banco("tareas");
+  const gente=todasPersonas();
+  h+=`<div class="filtros">${[["todas","Todas"],["pend","Sin hacer"],["sin","Sin nadie"]].map(([k,t])=>`<button class="chip" data-ftar="${k}" aria-pressed="${S.fTar===k}">${t}</button>`).join("")}
+    <select class="inp" id="quienTar" aria-label="Ver las tareas de una persona" style="width:auto;padding:4px 8px;font-size:13px"><option value="">De todos</option>${gente.map(n=>`<option ${S.quien===n?"selected":""}>${esc(n)}</option>`).join("")}</select></div>`;
+  let l=todas;
+  if(S.fTar==="pend") l=l.filter(t=>!t.hecho);
+  if(S.fTar==="sin") l=l.filter(t=>!enLista(t).length);
+  if(S.quien) l=l.filter(t=>enLista(t).map(baseNom).includes(S.quien));
+  const grupos=[...new Set(todas.map(t=>t.grupo||"Otras"))];
+  if(!todas.length) h+=`<div class="vacio">Todavía no hay tareas. ${ro?"":"Sumá la primera abajo."}</div>`;
+  h+=grupos.map(g=>{
+    const del=todas.filter(t=>(t.grupo||"Otras")===g), ver=l.filter(t=>(t.grupo||"Otras")===g);
+    return `<section class="grupo"><h3 class="gtit"><span>${esc(g)}</span><small>${del.filter(t=>t.hecho).length} de ${del.length} listas</small></h3>`+
+      (ver.map(tarjetaTarea).join("") || `<div class="nadie">Nada con este filtro.</div>`)+
+      (ro?"":`<form class="acciones formTarea" data-grupo="${esc(g)}"><input class="inp" name="t" placeholder="Sumar algo a «${esc(g)}»" autocomplete="off" style="flex:1;min-width:120px"><button class="btn" type="submit">+</button></form>`)+`</section>`;
+  }).join("");
+  if(!ro) h+=`<form class="acciones formTarea" data-grupo=""><input class="inp" name="g" placeholder="Grupo nuevo" autocomplete="off" style="flex:1;min-width:100px"><input class="inp" name="t" placeholder="Primera tarea del grupo" autocomplete="off" style="flex:2;min-width:120px"><button class="btn" type="submit">+ Sumar</button></form>`;
   return h;
 }
 async function moverPersona(nombre, desde, hacia){
   S.selPers=null;
   if(!hacia || desde===hacia || !S.canWrite){ renderPanel(); return; }
   const cambios=[], nm=baseNom(nombre);
-  if(desde!=="__banco" && S.roles.get(desde)) cambios.push([desde, enRol(S.roles.get(desde)).filter(n=>n!==nombre)]);
-  if(hacia!=="__banco" && S.roles.get(hacia)){
-    const l=enRol(S.roles.get(hacia));
-    if(l.map(baseNom).includes(nm)) toast(`${nm} ya está en ese rol.`); else cambios.push([hacia,[...l,nm]]);
-  }
+  if(desde!=="__banco"){ const [c,id]=destino(desde), r=coleccion(c)?.get(id); if(r) cambios.push([c,id,enLista(r).filter(n=>n!==nombre)]); }
+  if(hacia!=="__banco"){ const [c,id]=destino(hacia), r=coleccion(c)?.get(id);
+    if(r){ const l=enLista(r); if(l.map(baseNom).includes(nm)) toast(`${nm} ya está ahí.`); else cambios.push([c,id,[...l,nm]]); } }
   if(!cambios.length){ renderPanel(); return; }
-  cambios.forEach(([id,l])=>{ S.roles.get(id).personas=l.join(", "); });
+  cambios.forEach(([c,id,l])=>{ coleccion(c).get(id).personas=l.join(", "); });
   renderPanel();
-  try{ await Promise.all(cambios.map(([id,l])=>S.db.doc("roles/"+id).update({personas:l.join(", ")}))); }
+  try{ await Promise.all(cambios.map(([c,id,l])=>S.db.doc(c+"/"+id).update({personas:l.join(", ")}))); }
   catch(err){ errEscritura(err); }
 }
 async function borrarPersona(nombre){
@@ -578,7 +638,7 @@ function terminarArrastre(ev, cancelar){
   if(!arr || ev.pointerId!==arr.id) return;
   const a=arr; arr=null; clearInterval(a.tic); a.fant?.remove(); a.zona?.classList.remove("over"); a.el.classList.remove("yendo");
   if(cancelar) return;
-  if(a.movio){ moverPersona(a.nombre, a.desde, zonaEn(ev.clientX,ev.clientY)?.dataset.rol); return; }
+  if(a.movio){ moverPersona(a.nombre, a.desde, zonaEn(ev.clientX,ev.clientY)?.dataset.dest); return; }
   const mismo=S.selPers && S.selPers.nombre===a.nombre && S.selPers.desde===a.desde;
   S.selPers = mismo ? null : {nombre:a.nombre, desde:a.desde}; renderPanel();
 }
@@ -604,20 +664,33 @@ function renderTodo(){ renderMapa(); renderPanel(); renderStats(); }
 // ---------- eventos del panel ----------
 $("tabSec").onclick=()=>{ S.tab="sec"; S.formEmp=null; renderPanel(); };
 $("tabEmp").onclick=()=>{ S.tab="emp"; S.formEmp=null; renderPanel(); };
-$("tabRol").onclick=()=>{ S.tab="rol"; S.formEmp=null; S.selPers=null; renderPanel(); };
+$("tabRol").onclick=()=>{ S.tab="rol"; S.formEmp=null; S.selPers=null; S.borrar=null; renderPanel(); };
+$("tabTar").onclick=()=>{ S.tab="tar"; S.formEmp=null; S.selPers=null; S.borrar=null; renderPanel(); };
 const pb=$("pbody");
-// roles: arrastrar, tocar nombre y después rol, sacar, sumar
+// roles y tareas: arrastrar, tocar nombre y después destino, sacar, sumar, tildar
 pb.addEventListener("pointerdown", ev => {
   const c=ev.target.closest(".pers"); if(!c || ev.target.closest(".x") || !S.canWrite || ev.button>0) return;
   arr={nombre:c.dataset.nombre, desde:c.dataset.desde, el:c, x0:ev.clientX, y0:ev.clientY, id:ev.pointerId, movio:false, fant:null, zona:null, vy:0};
 });
-pb.addEventListener("click", ev => {
-  if(S.tab!=="rol") return;
-  const x=ev.target.closest(".x");
-  if(x){ const c=x.closest(".pers"); if(x.dataset.acc==="sacarRol") moverPersona(c.dataset.nombre, c.dataset.desde, "__banco"); else borrarPersona(c.dataset.nombre); return; }
-  if(ev.target.closest(".pers")) return; // el toque se resuelve en pointerup
-  const z=ev.target.closest(".zona") || ev.target.closest(".rol")?.querySelector(".zona");
-  if(S.selPers && z) moverPersona(S.selPers.nombre, S.selPers.desde, z.dataset.rol);
+pb.addEventListener("click", async ev => {
+  if(S.tab!=="rol" && S.tab!=="tar") return;
+  const x=ev.target.closest(".pers .x");
+  if(x){ const c=x.closest(".pers"); if(x.dataset.acc==="sacarPers") moverPersona(c.dataset.nombre, c.dataset.desde, "__banco"); else borrarPersona(c.dataset.nombre); return; }
+  const b=ev.target.closest("[data-ftar],[data-acc=borrarTarea],[data-acc=borrarTareaSi]");
+  if(b?.dataset.ftar){ S.fTar=b.dataset.ftar; renderPanel(); return; }
+  if(b?.dataset.acc==="borrarTarea"){ S.borrar="t:"+b.dataset.tarea; renderPanel(); return; }
+  if(b?.dataset.acc==="borrarTareaSi"){ const t=S.tareas.get(b.dataset.tarea); S.borrar=null; if(!t) return;
+    try{ await S.db.doc("tareas/"+t.id).delete(); toast(`«${t.tarea}» se borró.`); }catch(err){ errEscritura(err); } return; }
+  if(ev.target.closest(".pers,input,button,label,select,form")) return; // el toque en un nombre se resuelve en pointerup
+  const z=ev.target.closest(".zona") || ev.target.closest(".rol,.tarea")?.querySelector(".zona");
+  if(S.selPers && z) moverPersona(S.selPers.nombre, S.selPers.desde, z.dataset.dest);
+});
+pb.addEventListener("change", async ev => {
+  if(ev.target.id==="quienTar"){ S.quien=ev.target.value; renderPanel(); return; }
+  const c=ev.target.closest?.(".hecho"); if(!c) return;
+  const t=S.tareas.get(c.dataset.tarea); if(!t) return;
+  t.hecho=c.checked; renderPanel();
+  try{ await S.db.doc("tareas/"+t.id).update({hecho:c.checked}); }catch(err){ errEscritura(err); }
 });
 pb.addEventListener("keydown", ev => {
   const c=ev.target.closest?.(".pers"); if(!c || (ev.key!=="Enter" && ev.key!==" ") || !S.canWrite) return;
@@ -634,6 +707,12 @@ pb.addEventListener("submit", async ev => {
     ev.preventDefault(); const n=$("nuevoRol").value.trim(); if(!n) return;
     const orden=Math.max(0,...[...S.roles.values()].map(r=>Number(r.orden)||0))+1;
     try{ await S.db.collection("roles").doc().set({rol:n, que:"", personas:"", orden}); $("nuevoRol").value=""; renderPanel(); toast(`Rol «${n}» agregado.`); }catch(err){ errEscritura(err); }
+  }
+  if(ev.target.classList.contains("formTarea")){
+    ev.preventDefault(); const f=ev.target, t=f.elements.t.value.trim(), g=(f.dataset.grupo || f.elements.g?.value || "").trim() || "Otras";
+    if(!t){ f.elements.t.focus(); return; }
+    const orden=Math.max(0,...[...S.tareas.values()].map(x=>Number(x.orden)||0))+1;
+    try{ await S.db.collection("tareas").doc().set({grupo:g, tarea:t, detalle:"", personas:"", hecho:false, orden}); f.reset(); S.fTar="todas"; S.quien=""; renderPanel(); toast(`«${t}» sumado a ${g}.`); }catch(err){ errEscritura(err); }
   }
 });
 pb.addEventListener("click", async ev => {
@@ -712,12 +791,13 @@ renderTodo();
   let puede=null; try{ puede = user ? await user.can("data.write") : null; }catch{}
   S.canWrite = puede!==false;
   // No redibujar el panel mientras alguien escribe o arrastra un nombre.
-  const ocupado = () => arr?.movio || (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||"") && document.activeElement.closest("#pbody"));
+  const ocupado = () => { const a=document.activeElement; if(arr?.movio) return true; if(!a?.closest?.("#pbody")) return false;
+    return a.tagName==="TEXTAREA" || (a.tagName==="SELECT" && a.id!=="quienTar") || (a.tagName==="INPUT" && !/^(checkbox|radio|button|submit)$/.test(a.type)); };
   const listos=new Set();
   function escuchar(col, poner, aviso){
     db.collection(col).onSnapshot(snap => {
       poner(snap);
-      if(!S.conectado){ listos.add(col); if(listos.size===4) S.conectado=true; }
+      if(!S.conectado){ listos.add(col); if(listos.size===5) S.conectado=true; }
       if(S.conectado){ renderMapa(); renderStats(); if(!ocupado()) renderPanel(); }
     }, err => { toast(aviso); });
   }
@@ -729,6 +809,7 @@ renderTodo();
   escuchar("emprendedores", snap => { S.emps=mapa(snap); }, "Se cortó la conexión con los emprendedores. Recargá la página.");
   escuchar("roles", snap => { S.roles=mapa(snap); }, "Se cortó la conexión con los roles. Recargá la página.");
   escuchar("personas", snap => { S.personas=mapa(snap); }, "Se cortó la conexión con la lista de personas. Recargá la página.");
+  escuchar("tareas", snap => { S.tareas=mapa(snap); }, "Se cortó la conexión con las tareas. Recargá la página.");
 })();
 })();
 </script>

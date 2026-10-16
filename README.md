@@ -4,6 +4,7 @@ Plano interactivo del Parque Boronat para el domingo 18/10.
 
 - Activá **Mover cosas** y arrastrá los sectores. Tocá un sector para cargar notas, responsable y emprendedores.
 - Pestaña **Roles**: arrastrá cada nombre hasta su rol (con mouse o con el dedo), o tocá el nombre y después el rol. Soltarlo en «Personas» lo saca del rol.
+- Pestaña **Tareas**: cosas para llevar y para no olvidarse, por grupo. Se arrastran nombres igual que en Roles, se tildan cuando están listas y se filtran por persona («De todos» → elegí un nombre) para ver qué tiene que hacer o llevar cada uno.
 - Con la planilla conectada, todos ven lo mismo: lo que se cambia en la página va a la planilla, y lo que se edita en la planilla aparece en la página en unos 10 segundos.
 
 ## Conectar la planilla de Google (una sola vez, ~5 minutos)
@@ -14,7 +15,7 @@ Plano interactivo del Parque Boronat para el domingo 18/10.
 4. **Implementar → Nueva implementación → tipo: Aplicación web**. Ejecutar como: **yo**. Quién tiene acceso: **Cualquier usuario**. Implementar y copiar la URL (termina en `/exec`).
 5. Pegá esa URL en `config.js` (`PLANO_SHEETS_URL`) y, si querés el botón «Abrir planilla», el link de la planilla en `PLANO_SHEET_LINK`. Subí `config.js` al repo.
 
-Si cambiás `Codigo.gs` después: **Implementar → Administrar implementaciones → editar → Nueva versión** (la URL sigue siendo la misma).
+Si cambiás `Codigo.gs` después: pegá el archivo nuevo entero en Apps Script, guardá y andá a **Implementar → Administrar implementaciones → ✏️ editar → Versión: Nueva versión → Implementar** (la URL sigue siendo la misma). Las pestañas que falten se crean solas con lo de `datos.js`; las que ya existen no se tocan.
 
 **Ojo:** cualquiera que tenga el link de la página puede editar la planilla a través de ella. Para un evento de un fin de semana alcanza; si hace falta, después se despublica la aplicación web.
 
@@ -23,6 +24,7 @@ Si cambiás `Codigo.gs` después: **Implementar → Administrar implementaciones
 - Cada pestaña es una lista; la columna `id` identifica cada fila. No la cambies en filas que ya existen. Una fila nueva sin `id` recibe uno sola.
 - `roles`: la columna `personas` va separada por comas (`Fran, Guille`). `orden` define el orden en la página.
 - `emprendedores`: `sector` es el `id` del sector (`puestos-mesa`, `puestos-gazebo`); `estado` es consultado / pendiente / confirmado.
+- `tareas`: `grupo` (Cosas a llevar, Feriantes, Durante el evento…), `tarea`, `detalle`, `personas` (separadas por comas) y `hecho` (tilde).
 - `elementos`: la posición y la forma (`x`, `y`, `rot`, `pts`…) conviene moverlas desde la página.
 
 ## Sin planilla

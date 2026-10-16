@@ -25,6 +25,7 @@
     return d;
   }
   function aplicar(d) {
+    window.planoSheets.cols = Object.keys(d);
     Object.keys(d).forEach(col => {
       const txt = JSON.stringify(d[col]);
       if (txt === ultimo[col]) return;
@@ -86,7 +87,7 @@
     doc: ruta => { const [col, id] = ruta.split("/"); return doc(col, id); },
   };
 
-  window.planoSheets = { link: window.PLANO_SHEET_LINK || "", fallo: false };
+  window.planoSheets = { link: window.PLANO_SHEET_LINK || "", fallo: false, cols: [] };
   let listo = null;
   window.claude = {
     use: async k => {

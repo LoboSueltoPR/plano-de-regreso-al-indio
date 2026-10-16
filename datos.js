@@ -340,5 +340,135 @@ window.DATOS_PLANO = {
     "tyler": {
       "nombre": "Tyler"
     }
+  },
+  "tareas": {
+    "gazebo": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Gazebo",
+      "detalle": "",
+      "personas": "Tino",
+      "hecho": false,
+      "orden": 1
+    },
+    "vasos": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Vasos x20 (local)",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 2
+    },
+    "cafe-te": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Café y té (local)",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 3
+    },
+    "tortas": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Tortas x3",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 4
+    },
+    "bidones": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Bidones de agua x4",
+      "detalle": "",
+      "personas": "Tino",
+      "hecho": false,
+      "orden": 5
+    },
+    "dispenser": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Dispenser x2",
+      "detalle": "Buscar por lo de Rosa",
+      "personas": "Tino",
+      "hecho": false,
+      "orden": 6
+    },
+    "limpieza-banos-insumos": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Papel higiénico, lavandina y guantes (local)",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 7
+    },
+    "mesa": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Mesa (local)",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 8
+    },
+    "zapatilla": {
+      "grupo": "Cosas a llevar",
+      "tarea": "Zapatilla (local)",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 9
+    },
+    "lista-puestos": {
+      "grupo": "Feriantes",
+      "tarea": "Confirmar la lista de puestos y armar el mapa orientativo",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 10
+    },
+    "avisar-feriantes": {
+      "grupo": "Feriantes",
+      "tarea": "Avisar horario de llegada y que traigan mesa propia",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 11
+    },
+    "ubicar-puestos": {
+      "grupo": "Feriantes",
+      "tarea": "Recibir y ubicar los puestos",
+      "detalle": "",
+      "personas": "",
+      "hecho": false,
+      "orden": 12
+    },
+    "limpieza-general": {
+      "grupo": "Durante el evento",
+      "tarea": "Limpieza general",
+      "detalle": "Tachos y bolsas de basura",
+      "personas": "",
+      "hecho": false,
+      "orden": 13
+    },
+    "limpieza-banos": {
+      "grupo": "Durante el evento",
+      "tarea": "Limpieza de baños químicos",
+      "detalle": "Lavandina, guantes y papel higiénico",
+      "personas": "",
+      "hecho": false,
+      "orden": 14
+    },
+    "recibir-gente": {
+      "grupo": "Durante el evento",
+      "tarea": "Recibir a la gente y orientar",
+      "detalle": "",
+      "personas": "Cami M., José, Mari",
+      "hecho": false,
+      "orden": 15
+    },
+    "presentar": {
+      "grupo": "Durante el evento",
+      "tarea": "Presentar la banda y decir las palabras",
+      "detalle": "",
+      "personas": "Charito",
+      "hecho": false,
+      "orden": 16
+    }
   }
 };

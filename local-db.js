@@ -5,15 +5,15 @@
   const clonar = o => JSON.parse(JSON.stringify(o));
   const original = () => {
     const d = clonar(window.DATOS_PLANO || {});
-    return { elementos: d.elementos || {}, emprendedores: d.emprendedores || {}, roles: d.roles || {}, personas: d.personas || {} };
+    return { ...d, elementos: d.elementos || {}, emprendedores: d.emprendedores || {} };
   };
 
   let estado = null;
   try { estado = JSON.parse(localStorage.getItem(CLAVE)); } catch (e) {}
   if (!estado || typeof estado.elementos !== "object") estado = original();
-  estado.emprendedores ||= {};
-  // Guardados de antes de los roles: tomarlos de datos.js
-  if (!estado.roles) { const o = original(); estado.roles = o.roles; estado.personas = o.personas; }
+  // Guardados de antes de una lista nueva (roles, tareas…): tomarla de datos.js
+  const o = original();
+  Object.keys(o).forEach(k => { if (!estado[k]) estado[k] = o[k]; });
 
   const subs = {};
   function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} }
