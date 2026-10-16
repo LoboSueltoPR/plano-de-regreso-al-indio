@@ -11,8 +11,8 @@ window.DATOS_PLANO = {
       "rot": -25,
       "color": "#e5282e",
       "num": 1,
-      "nota": "",
-      "responsable": ""
+      "nota": "Tarima de menos de 1 m (no es escenario).\nScaramanzia a las 18 hs, unas 2 horas con presentación y palabras.\nArmado desde las 15 hs, desarme de 20 a 22 hs.",
+      "responsable": "Lobo (banda) · Charito (presentación)"
     },
     "gazebo-artistas": {
       "tipo": "gazebo",
@@ -24,8 +24,8 @@ window.DATOS_PLANO = {
       "rot": 0,
       "color": "#3aa63a",
       "num": 2,
-      "nota": "",
-      "responsable": ""
+      "nota": "Para Scaramanzia.\nAgua para la banda y la organización: 4 bidones, 2 dispensers, vasos.",
+      "responsable": "Pauli, Tino y Rope · gazebo: Tino"
     },
     "publico": {
       "tipo": "publico",
@@ -37,8 +37,8 @@ window.DATOS_PLANO = {
       "escala": 1,
       "color": "#d6c63a",
       "num": 3,
-      "nota": "",
-      "responsable": "",
+      "nota": "Frente a la tarima, sobre el desnivel para ver mejor.\nSe esperan 80 a 100 personas. Público desde las 16 hs.\nTraé remera lisa para estampar. Sin venta de comida ni bebida.",
+      "responsable": "Cami M., José y Mari",
       "pts": [
         [
           -56.6,
@@ -87,8 +87,8 @@ window.DATOS_PLANO = {
       "num": 4,
       "cupos": 8,
       "recibe": true,
-      "nota": "",
-      "responsable": ""
+      "nota": "Espacio de exposición y venta de productos culturales y merchandising.\nCada puesto trae su mesa. Sin venta de comida ni bebida.",
+      "responsable": "Luni, Lauti Rios, Nicky Polo y Lala"
     },
     "puestos-gazebo": {
       "tipo": "puestos",
@@ -103,8 +103,8 @@ window.DATOS_PLANO = {
       "num": 5,
       "cupos": 6,
       "recibe": true,
-      "nota": "",
-      "responsable": ""
+      "nota": "Espacio de exposición y venta de productos culturales y merchandising.\nCada puesto trae su mesa. Sin venta de comida ni bebida.\nLos de gazebo van todos de este lado, atrás, para no tapar la tarima.",
+      "responsable": "Luni, Lauti Rios, Nicky Polo y Lala"
     },
     "banos": {
       "tipo": "banos",
@@ -116,7 +116,7 @@ window.DATOS_PLANO = {
       "rot": 0,
       "color": "#a565f0",
       "num": 6,
-      "nota": "",
+      "nota": "Dos baños químicos: uno accesible (con paso libre) y uno común.\nPapel higiénico, lavandina y guantes.",
       "responsable": ""
     },
     "trapo": {
@@ -129,7 +129,7 @@ window.DATOS_PLANO = {
       "rot": 0,
       "color": "#f08a1c",
       "num": 7,
-      "nota": "",
+      "nota": "Trapo homenaje pintado en el día.",
       "responsable": ""
     },
     "extintor-1": {
@@ -144,7 +144,7 @@ window.DATOS_PLANO = {
       "color": "#e5282e",
       "contorno": true,
       "num": 8,
-      "nota": "En las puntas de la tarima.",
+      "nota": "En las puntas de la tarima. 5 kg ABC.",
       "responsable": ""
     },
     "extintor-2": {
@@ -159,7 +159,7 @@ window.DATOS_PLANO = {
       "color": "#e5282e",
       "contorno": true,
       "num": 8,
-      "nota": "En las puntas de la tarima.",
+      "nota": "En las puntas de la tarima. 5 kg ABC.",
       "responsable": ""
     },
     "ambulancia": {
@@ -174,7 +174,7 @@ window.DATOS_PLANO = {
       "color": "#c8102e",
       "contorno": true,
       "num": 9,
-      "nota": "Ramón y Cajal y Napostá.",
+      "nota": "Ramón y Cajal y Napostá, con salida directa.",
       "responsable": ""
     },
     "toma": {
@@ -188,8 +188,8 @@ window.DATOS_PLANO = {
       "color": "#22b5ec",
       "num": 10,
       "conectaA": "tarima",
-      "nota": "Cable a la tarima: cruza la ciclovía, va con cubrecable.",
-      "responsable": ""
+      "nota": "Objeto redondo junto a la ciclovía.\nCable a la tarima: cruza la ciclovía, va con cubrecable.",
+      "responsable": "Fran y Guille (sonido)"
     }
   },
   "emprendedores": {}
