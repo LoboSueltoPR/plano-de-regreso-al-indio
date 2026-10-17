@@ -7,7 +7,7 @@
 
 const COLUMNAS = {
   elementos: ["id", "num", "nombre", "responsable", "nota", "cupos", "recibe", "tipo", "color", "forma", "x", "y", "w", "h", "r", "rot", "escala", "contorno", "conectaA", "pts"],
-  emprendedores: ["id", "nombre", "rubro", "contacto", "sector", "estado", "luz", "notas", "creado"],
+  emprendedores: ["id", "nombre", "rubro", "contacto", "sector", "puesto", "estado", "luz", "notas", "creado"],
   roles: ["id", "orden", "rol", "personas", "que"],
   personas: ["id", "nombre"],
   tareas: ["id", "orden", "grupo", "tarea", "detalle", "personas", "hecho"],

@@ -140,6 +140,15 @@ textarea.inp{resize:vertical;min-height:64px}
 .pers .cnt{font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:0 6px;margin-left:4px}
 .pers .x{border:0;background:none;color:var(--muted);cursor:pointer;width:22px;height:22px;border-radius:5px;line-height:1;padding:0}
 .pers .x:hover{background:var(--line)}
+/* orden de la fila en un sector: número | tarjeta | ↑ ⠿ ↓ */
+.oitem{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;border-radius:10px}
+.oitem.moviendo{outline:2px dashed var(--focus);outline-offset:3px;background:var(--surface2)}
+.oitem>.form{grid-column:1/-1}
+.pnum{width:26px;height:26px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--surface)}
+.omov{display:flex;flex-direction:column;align-items:center;gap:2px}
+.asa{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--muted);font-size:18px;line-height:1;padding:3px 6px;border-radius:6px}
+.asa:hover{background:var(--surface2)}
+.btn.sq.mini{width:28px;padding:3px 0}
 /* tareas: agrupadas (cosas a llevar, feriantes, durante el evento); borde ámbar = nadie a cargo, tachada = lista */
 .progreso{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
 .progreso .minibar{flex:1;min-width:80px;width:auto;margin:0}
@@ -287,12 +296,15 @@ function limpiar(x){
 const ordenados = () => [...S.els.values()].sort((a,b)=>(a.num??99)-(b.num??99) || String(a.nombre).localeCompare(b.nombre));
 const sectoresPuestos = () => ordenados().filter(e=>e.recibe);
 const empsDe = id => [...S.emps.values()].filter(p=>p.sector===id);
+// Orden en la fila del sector (campo «puesto»); los que no tienen lugar van al final por nombre.
+const enFila = id => empsDe(id).sort((a,b)=>(Number(a.puesto)||999)-(Number(b.puesto)||999) || String(a.nombre).localeCompare(b.nombre));
 function ocupacion(e){ const l=empsDe(e.id); return {conf:l.filter(p=>p.estado==="confirmado").length, total:l.length, cupos:e.cupos||0}; }
 
 // ---------- mapa ----------
 function shapeSVG(e){
   const fill = e.contorno ? "#fff" : e.color, stroke = e.contorno ? e.color : "#fff", sw = e.contorno ? 2.2 : 2;
   let g = "", out = "";
+  if(e.recibe){ const l=enFila(e.id); if(l.length) g += `<title>${esc(e.nombre)}: ${l.map((p,i)=>`${i+1}. ${esc(p.nombre)}`).join(" · ")}</title>`; }
   if(e.forma==="rect"){
     g += `<rect x="${-e.w/2}" y="${-e.h/2}" width="${e.w}" height="${e.h}" rx="1.5" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
     if(e.recibe && e.cupos>0){
@@ -487,11 +499,12 @@ function vistaDetalle(e){
   let h=`<button class="volver" data-acc="volver">← Todos los sectores</button>
   <div class="det-head">${numHTML(e)}<input id="fNombre" value="${esc(e.nombre)}" aria-label="Nombre del sector" ${rdo}></div>`;
   if(e.recibe){
-    const l=empsDe(e.id).sort((a,b)=>(a.estado==="confirmado"?0:1)-(b.estado==="confirmado"?0:1)||String(a.nombre).localeCompare(b.nombre));
+    const l=enFila(e.id), mover=!ro && !S.formEmp && l.length>1;
     const o=ocupacion(e);
     h+=`<div class="acciones" style="justify-content:space-between"><span class="lbl">Emprendedores · ${o.conf}/${o.cupos} confirmados</span>${ro?"":`<button class="btn" data-acc="nuevoEmp" data-sector="${esc(e.id)}">+ Sumar emprendedor</button>`}</div>`;
     if(S.formEmp && S.formEmp.sector===e.id && !S.formEmp.id) h+=formEmp(S.formEmp);
-    h+= l.length ? `<div class="emps">${l.map(p=>S.formEmp?.id===p.id?formEmp(S.formEmp):tarjetaEmp(p,false)).join("")}</div>` :
+    if(l.length) h+=`<p class="ayuda">En el orden en que van en la fila.${mover?" Para cambiarlo, arrastrá desde ⠿ o usá las flechas.":""}</p>`;
+    h+= l.length ? `<div class="emps orden" data-sector="${esc(e.id)}">${l.map((p,i)=>S.formEmp?.id===p.id?formEmp(S.formEmp):itemFila(p,i,l.length,e.color,mover)).join("")}</div>` :
        `<div class="vacio">Todavía no hay emprendedores en este sector. ${ro?"":"Sumá el primero con el botón de arriba."}</div>`;
     h+=`<hr class="sep">`;
   }
@@ -509,9 +522,13 @@ function vistaDetalle(e){
   else h+=`<div class="ro-note">Modo lectura: podés ver todo, pero no cambiarlo.</div>`;
   return h;
 }
+function itemFila(p, i, n, color, mover){
+  return `<div class="oitem" data-orden="${esc(p.id)}"><span class="pnum" style="background:${color}" title="Lugar en la fila">${i+1}</span>${tarjetaEmp(p,false)}`+
+    (mover?`<span class="omov"><button class="btn sq mini" type="button" data-acc="subirEmp" data-id="${esc(p.id)}" ${i?"":"disabled"} aria-label="Subir a ${esc(p.nombre)}">↑</button><span class="asa" title="Arrastrar para cambiar el orden" aria-hidden="true">⠿</span><button class="btn sq mini" type="button" data-acc="bajarEmp" data-id="${esc(p.id)}" ${i<n-1?"":"disabled"} aria-label="Bajar a ${esc(p.nombre)}">↓</button></span>`:"")+`</div>`;
+}
 function tarjetaEmp(p, conSector){
   const s=S.els.get(p.sector);
-  return `<button class="emp" data-emp="${esc(p.id)}"><div class="l1"><span class="n">${esc(p.nombre)}</span><span class="pill ${esc(p.estado||"pendiente")}">${esc(p.estado||"pendiente")}</span>${conSector&&s?`<span class="tag" style="background:${s.color}">${esc(s.num??"")} ${esc(s.nombre)}</span>`:""}</div>`+
+  return `<button class="emp" data-emp="${esc(p.id)}"><div class="l1"><span class="n">${esc(p.nombre)}</span><span class="pill ${esc(p.estado||"pendiente")}">${esc(p.estado||"pendiente")}</span>${conSector&&s?`<span class="tag" style="background:${s.color}">${esc(s.num??"")} ${esc(s.nombre)}${p.puesto?` · ${esc(p.puesto)}°`:""}</span>`:""}</div>`+
     (p.rubro?`<div class="r">${esc(p.rubro)}</div>`:"")+(p.contacto?`<div class="c">${esc(p.contacto)}</div>`:"")+(p.luz?`<div class="luz">⚡ Necesita luz</div>`:"")+(p.notas?`<div class="r">${esc(p.notas)}</div>`:"")+`</button>`;
 }
 function formEmp(f){
@@ -715,6 +732,43 @@ pb.addEventListener("change", async ev => {
   t.hecho=c.checked; renderPanel();
   try{ await S.db.doc("tareas/"+t.id).update({hecho:c.checked}); }catch(err){ errEscritura(err); }
 });
+// Orden de los emprendedores en la fila de un sector: flechas o arrastrar desde ⠿.
+async function guardarOrden(ids){
+  const cambios=[];
+  ids.forEach((id,i)=>{ const p=S.emps.get(id); if(p && Number(p.puesto)!==i+1){ p.puesto=i+1; cambios.push([id,i+1]); } });
+  renderTodo();
+  if(!cambios.length) return;
+  try{ await Promise.all(cambios.map(([id,n])=>S.db.doc("emprendedores/"+id).update({puesto:n}))); }catch(err){ errEscritura(err); }
+}
+pb.addEventListener("click", ev => {
+  const b=ev.target.closest("[data-acc=subirEmp],[data-acc=bajarEmp]"); if(!b) return;
+  const ids=enFila(b.closest(".orden").dataset.sector).map(p=>p.id), i=ids.indexOf(b.dataset.id), j=i+(b.dataset.acc==="subirEmp"?-1:1);
+  if(i<0 || j<0 || j>=ids.length) return;
+  [ids[i],ids[j]]=[ids[j],ids[i]]; guardarOrden(ids);
+});
+let ord=null;
+pb.addEventListener("pointerdown", ev => {
+  const a=ev.target.closest(".asa"); if(!a || !S.canWrite || ev.button>0) return;
+  const it=a.closest(".oitem"); ev.preventDefault(); a.setPointerCapture(ev.pointerId);
+  ord={it, lista:it.parentElement, id:ev.pointerId, vy:0, tic:setInterval(()=>{ if(ord?.vy) window.scrollBy(0, ord.vy*12); },30)};
+  it.classList.add("moviendo");
+});
+pb.addEventListener("pointermove", ev => {
+  if(!ord || ev.pointerId!==ord.id) return;
+  const {it, lista}=ord, sig=[...lista.querySelectorAll(".oitem")].filter(x=>x!==it).find(x=>{ const r=x.getBoundingClientRect(); return ev.clientY<r.top+r.height/2; });
+  if(sig){ if(it.nextElementSibling!==sig) lista.insertBefore(it, sig); } else if(lista.lastElementChild!==it) lista.appendChild(it);
+  lista.querySelectorAll(".pnum").forEach((n,i)=>n.textContent=i+1);
+  ord.vy = ev.clientY<70 ? -1 : ev.clientY>innerHeight-70 ? 1 : 0;
+});
+function soltarOrden(ev, cancelar){
+  if(!ord || ev.pointerId!==ord.id) return;
+  const o=ord; ord=null; clearInterval(o.tic); o.it.classList.remove("moviendo");
+  if(cancelar){ renderPanel(); return; }
+  guardarOrden([...o.lista.querySelectorAll(".oitem")].map(x=>x.dataset.orden));
+}
+pb.addEventListener("pointerup", ev => soltarOrden(ev));
+pb.addEventListener("pointercancel", ev => soltarOrden(ev, true));
+
 // Textos editables de tareas: Enter guarda (al salir del campo), Esc vuelve a lo que había.
 pb.addEventListener("keydown", ev => {
   const ed=ev.target.closest?.(".edit"); if(!ed) return;
@@ -767,6 +821,10 @@ pb.addEventListener("submit", async ev => {
   const datos={nombre:$("eNombre").value.trim(), rubro:$("eRubro").value.trim(), contacto:$("eContacto").value.trim(), sector:$("eSector").value,
     estado:$("eEstado").value, luz:$("eLuz").checked, notas:$("eNotas").value.trim()};
   if(!datos.nombre){ $("eNombre").focus(); return; }
+  // Nuevo en un sector, o cambió de sector: va al final de esa fila
+  const previo=f.id?S.emps.get(f.id):null;
+  if(datos.sector && previo?.sector!==datos.sector){ const otros=empsDe(datos.sector).filter(p=>p.id!==f.id); datos.puesto=Math.max(otros.length, ...otros.map(p=>Number(p.puesto)||0))+1; }
+  else if(!datos.sector) datos.puesto=null;
   try{
     if(f.id){ await S.db.doc("emprendedores/"+f.id).update(datos); S.emps.set(f.id,{...S.emps.get(f.id),...datos}); toast("Cambios guardados."); }
     else { datos.creado=Date.now(); const ref=S.db.collection("emprendedores").doc(); await ref.set(datos); S.emps.set(ref.id,{...datos,id:ref.id}); toast(`${datos.nombre} sumado.`); }
@@ -821,7 +879,7 @@ renderTodo();
   let puede=null; try{ puede = user ? await user.can("data.write") : null; }catch{}
   S.canWrite = puede!==false;
   // No redibujar el panel mientras alguien escribe o arrastra un nombre.
-  const ocupado = () => { const a=document.activeElement; if(arr?.movio) return true; if(!a?.closest?.("#pbody")) return false;
+  const ocupado = () => { const a=document.activeElement; if(arr?.movio || ord) return true; if(!a?.closest?.("#pbody")) return false;
     return a.tagName==="TEXTAREA" || (a.tagName==="SELECT" && a.id!=="quienTar") || (a.tagName==="INPUT" && !/^(checkbox|radio|button|submit)$/.test(a.type)); };
   const listos=new Set();
   function escuchar(col, poner, aviso){
